@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<div th:replace="~{fragment :: meta}"></div>
+	<div th:replace="~{fragment :: styles}"></div>
+	<title>退会手続き</title>
+</head>
+
+<body>
+	<div class="nagoyameshi-wrapper">
+		<div th:replace="~{fragment :: header}"></div>
+
+		<main>
+			<div class="container pb-5 nagoyameshi-container">
+				<div class="row justify-content-center">
+					<div class="col-xl-5 col-lg-6 col-md-8">
+
+						<!-- パンくず -->
+						<nav class="my-3" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+							<ol class="breadcrumb mb-0">
+								<li class="breadcrumb-item"><a th:href="@{/}">ホーム</a></li>
+								<li class="breadcrumb-item active" aria-current="page">退会</li>
+							</ol>
+						</nav>
+
+						<h1 class="mb-3 text-center">アカウント退会の確認</h1>
+						<hr class="mb-4">
+
+						<!-- 現在のアカウント案内 -->
+						<div class="alert alert-warning small" th:if="${user != null}">
+							<span th:text="|現在、あなたは ユーザー名 ${user.name} 様として ${roleName} にてサービスをご利用中です。|"></span><br>
+							退会するとアカウントは利用できなくなります。必要な情報のバックアップを事前に行ってください。
+						</div>
+
+						<div th:if="${successMessage}" class="alert alert-info">
+							<span th:text="${successMessage}"></span>
+						</div>
+
+						<div th:if="${errorMessage}" class="alert alert-danger">
+							<span th:text="${errorMessage}"></span>
+						</div>
+
+						<form th:action="@{|/withdrawal/delete/${user.id}|}" th:object="${userWithdrawalForm}"
+							method="post">
+
+							<!-- CSRF -->
+							<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+							<!-- 退会理由 -->
+							<div class="form-group row mb-3">
+								<div class="col-md-5">
+									<label for="deleteReason" class="col-form-label text-md-left fw-bold">
+										<div class="d-flex align-items-center">
+											<span class="me-1">退会理由</span>
+											<span class="badge bg-danger">必須</span>
+											<span id="notice" style="display: none; color: red;"></span>
+											<span id="safety" style="display: none; color: green;"></span>
+											<br>
+										</div>
+									</label>
+								</div>
+								<div class="col-md-7">
+									<div th:if="${#fields.hasErrors('deleteReason')}" class="text-danger small mb-2"
+										th:errors="*{deleteReason}"></div>
+									<textarea id="deleteReason" class="form-control" required th:field="*{deleteReason}"rows="5" placeholder="差し支えなければご記入ください（例：利用頻度が低いため 等）"></textarea>
+									<!-- 200文字よりも多く物理的に入力できないようにする場合はこちらを使う <textarea id="deleteReason" class="form-control" required maxlength="200" th:field="*{deleteReason}"rows="5" placeholder="差し支えなければご記入ください（例：利用頻度が低いため 等）"></textarea> -->
+								</div>
+							</div>
+
+							<hr class="my-4">
+
+							<!-- ボタン -->
+							<div class="d-flex justify-content-center gap-3">
+								<button id="withdrawButton" type="submit"
+									class="btn text-white shadow-sm w-50 nagoyameshi-btn" disabled>
+									退会する
+								</button>
+								<a th:href="@{/}" class="btn btn-outline-secondary w-25">キャンセル</a>
+							</div>
+						</form>
+
+					</div>
+				</div>
+			</div>
+		</main>
+
+		<div th:replace="~{fragment :: footer}"></div>
+	</div>
+
+	<div th:replace="~{fragment :: scripts}"></div>
+	<script th:src="@{/js/withdrawal.js}"></script>
+</body>
+
+</html>
