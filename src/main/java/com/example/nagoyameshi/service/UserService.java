@@ -30,6 +30,8 @@ import com.example.nagoyameshi.service.error.RejoinUserNotFoundException;
 
 @Service
 public class UserService {
+	private static final String ROLE_NAME = "ROLE_FREE_MEMBER";
+
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
 	private final PasswordEncoder passwordEncoder;
@@ -41,41 +43,34 @@ public class UserService {
 		this.passwordEncoder = passwordEncoder;
 	}
 
-	@Transactional
+	//	@Transactional
 	public User createUser(SignupForm signupForm) {
-		User user = new User();
-		Role role = roleRepository.findByName("ROLE_FREE_MEMBER");
 
+		User user = new User();
+		Role role = roleRepository.findByName(ROLE_NAME);
+
+		// setはまとめて書く（リファクタリングの観点から、ユーザーの属性を一括で設定する方がコードの見通しが良くなるため）
+		// カラム順にするのもありだが、set→if→setの順番にすると処理が分散して見にくくなる
 		user.setName(signupForm.getName());
 		user.setFurigana(signupForm.getFurigana());
 		user.setPostalCode(signupForm.getPostalCode());
 		user.setAddress(signupForm.getAddress());
 		user.setPhoneNumber(signupForm.getPhoneNumber());
-
-		if (!signupForm.getBirthday().isEmpty()) {
-			user.setBirthday(LocalDate.parse(signupForm.getBirthday(), DateTimeFormatter.ofPattern("yyyyMMdd")));
-		} else {
-			user.setBirthday(null);
-		}
-
-		// if (!signupForm.getOccupation().isEmpty()) {
-		user.setOccupation(signupForm.getOccupation());
-		// } else {
-		// 	user.setOccupation(null);
-		// }
-
+		user.setOccupation(toNullIfBlank(signupForm.getOccupation()));
 		user.setEmail(signupForm.getEmail());
 		user.setPassword(passwordEncoder.encode(signupForm.getPassword()));
 		user.setRole(role);
-
 		user.setEnabled(false);
+		user.setBirthday(parseBirthdayOrNull(signupForm.getBirthday()));
+
+		// 認知的複雑性を減らすため、elseの処理は削除して、birthdayはnullのままにする
 
 		return userRepository.save(user);
 
 	}
 
 	// userFormでリファクタリング
-	@Transactional
+	//	@Transactional
 	public void updateUser(UserEditForm userEditForm, User user) {
 
 		user.setName(userEditForm.getName());
@@ -83,34 +78,37 @@ public class UserService {
 		user.setPostalCode(userEditForm.getPostalCode());
 		user.setAddress(userEditForm.getAddress());
 		user.setPhoneNumber(userEditForm.getPhoneNumber());
-
-		if (!userEditForm.getBirthday().isEmpty()) {
-			user.setBirthday(LocalDate.parse(userEditForm.getBirthday(), DateTimeFormatter.ofPattern("yyyyMMdd")));
-		} else {
-			user.setBirthday(null);
-		}
-
-		if (!userEditForm.getOccupation().isEmpty()) {
-			user.setOccupation(userEditForm.getOccupation());
-		} else {
-			user.setOccupation(null);
-		}
-
+		user.setOccupation(toNullIfBlank(userEditForm.getOccupation()));
 		user.setEmail(userEditForm.getEmail());
+		user.setBirthday(parseBirthdayOrNull(userEditForm.getBirthday()));
 
 		userRepository.save(user);
 
+	}
+
+	// birthdayの文字列をLocalDateに変換する。空文字やスペースのみの場合はnullを返す
+	private LocalDate parseBirthdayOrNull(String birthday) {
+		String normalizedBirthday = toNullIfBlank(birthday);
+		if (normalizedBirthday == null) {
+			return null;
+		}
+
+		return LocalDate.parse(normalizedBirthday, DateTimeFormatter.ofPattern("yyyyMMdd"));
+	}
+
+	// 文字列がnull、空文字、スペースのみの場合はnullを返す。それ以外はtrimした文字列を返す
+	private String toNullIfBlank(String value) {
+		if (value == null || value.trim().isEmpty()) {
+			return null;
+		}
+
+		return value.trim();
 	}
 
 	// メールアドレスが登録済みかどうかをチェックする
 	public boolean isEmailRegistered(String email) {
 		User user = userRepository.findByEmail(email);
 		return user != null;
-	}
-
-	// パスワードとパスワード（確認用）の入力値が一致するかどうかをチェックする(SignupFormの方がいい)
-	public boolean isSamePassword(String password, String passwordConfirmation) {
-		return password.equals(passwordConfirmation);
 	}
 
 	// ユーザーを有効にする
@@ -196,7 +194,8 @@ public class UserService {
 			throw new RejoinUserNotFoundException();
 		}
 
-		if (Boolean.TRUE.equals(user.getEnabled())) {
+		// 正しくない書き方ではかもしれない→調査が必要
+		if (user.isEnabled()) {
 			throw new AlreadyEnabledException();
 		}
 
@@ -205,7 +204,9 @@ public class UserService {
 		user.setDeleteReason(null);
 
 		user.setEnabled(true);
-		userRepository.save(user);
+		//　Transactionと明示的に書いているから、UPDATEまで保証されている。
+		// 通信確立されていて、findで行をとってくるから、saveメソッドは不要。
+		//　userRepository.save(user); // いらない Select For Updateでロックされるため、更新の必要がない場合はsaveしない方が良い
 	}
 
 	// 認証情報のロールを更新する

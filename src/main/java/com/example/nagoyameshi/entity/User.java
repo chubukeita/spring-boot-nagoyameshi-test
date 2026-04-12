@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
 import lombok.Data;
 
 @Entity
@@ -55,7 +56,7 @@ public class User {
 	private Role role;
 
 	@Column(name = "enabled")
-	private Boolean enabled;
+	private boolean enabled;
 
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
@@ -74,4 +75,5 @@ public class User {
 
 	@Column(name = "updated_at", insertable = false, updatable = false)
 	private Timestamp updatedAt;
+
 }

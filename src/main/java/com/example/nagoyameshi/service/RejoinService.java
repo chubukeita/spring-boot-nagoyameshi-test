@@ -1,6 +1,6 @@
 package com.example.nagoyameshi.service;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,20 +14,17 @@ import com.example.nagoyameshi.service.error.RejoinUserNotFoundException;
 
 @Service
 public class RejoinService {
-	private final RejoinTokenService rejoinTokenService;
-	private final UserService userService;
-	private final UserRepository userRepository;
-	private final PasswordEncoder passwordEncoder;
-	private final RejoinEventPublisher rejoinEventPublisher;
+	@Autowired
+	private RejoinTokenService rejoinTokenService;
 
-	public RejoinService(RejoinTokenService rejoinTokenService, UserService userService, UserRepository userRepository,
-			PasswordEncoder passwordEncoder, RejoinEventPublisher rejoinEventPublisher) {
-		this.rejoinTokenService = rejoinTokenService;
-		this.userService = userService;
-		this.userRepository = userRepository;
-		this.passwordEncoder = passwordEncoder;
-		this.rejoinEventPublisher = rejoinEventPublisher;
-	}
+	@Autowired
+	private UserService userService;
+
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
+	private RejoinEventPublisher rejoinEventPublisher;
 
 	// リクエスト受付（存在可否は秘匿し、常に同じレスポンスでOK）
 	public void requestRejoin(String email, String requestUrl) {
@@ -39,7 +36,7 @@ public class RejoinService {
 		return rejoinTokenService.findRejoinTokenByToken(token) != null;
 	}
 
-	// 		if (rejoinToken == null) {
+	// if (rejoinToken == null) {
 	//	String errorMessage = "トークンが無効です。恐れ入りますが、再度メール認証からやり直してください。";
 	//	model.addAttribute("errorMessage", errorMessage);
 	//	return "auth/invalid";
@@ -49,6 +46,16 @@ public class RejoinService {
 	// returnでメッセージと結果を含んだクラスを作って、(rejoin)Resultオブジェクトをbooleanでfalse、成功時trueを返す。
 	// errorパッケージも消して、RejoinControllerのsuccessMessageやerrorMessageはまとめておく
 	// 一つのクラスにまとめてstaticで呼ぶ。
+
+	// ○○という理由でエラーになりました。
+	// どうしたらrejoinできるのかを知りたい。
+	// そういった設計で考えて、導線を考える
+	// ユーザーの次のアクションを伝える。もう一度やり直し、メールをもう一回投げる、URLどこにアクセスすればいいか？
+	// やり直すところはどこか？
+	// ユーザーが何をすればよいのか、どうすればいいのかを伝えるメッセージも入れる。
+
+	// どういう画面にしたいのか
+	// どの画面を出すのか、使いまわし、新しい画面なのか、既存なのか、新規で画面を作るのか
 
 	@Transactional
 	public void rejoin(String token) {
@@ -66,7 +73,7 @@ public class RejoinService {
 			throw new RejoinUserNotFoundException();
 		}
 
-		if (user.getEnabled()) {
+		if (user.isEnabled()) {
 			throw new AlreadyEnabledException();
 		}
 

@@ -105,7 +105,9 @@ INSERT IGNORE INTO users (id, name, furigana, postal_code, address, phone_number
 (97, '石川 良太', 'イシカワ リョウタ', '7300032', '広島県広島市中区X-XX-XX', '09012345678', '1975-05-01', '小説家', 'ryota.ishikawa@example.com', 'password', 1, false),
 (98, '吉岡 里帆', 'ヨシオカ リホ', '8100042', '福岡県福岡市中央区X-XX-XX', '09012345678', '1976-05-26', 'ジャーナリスト', 'riho.yoshioka@example.com', 'password', 1, false),
 (99, '福田 順二', 'フクダ ジュンジ', '2200042', '神奈川県横浜市西区X-XX-XX', '09012345678', '1976-05-26', '漫画家', 'junji.fukuda@example.com', 'password', 1, false),
-(100, '石田 花音', 'イシダ カノン', '6500044', '兵庫県神戸市中央区X-XX-XX', '09012345678', '1977-06-20', 'アニメーター', 'kanon.ishida@example.com', 'password', 1, false);
+(100, '石田 花音', 'イシダ カノン', '6500044', '兵庫県神戸市 中央区X-XX-XX', '09012345678', '1977-06-20', 'アニメーター', 'kanon.ishida@example.com', 'password', 1, false),
+(101, 'テスト ユーザ', 'テスト ユーザ', '1000001', '東京都千代田区X-XX-XX', '09000000000', '1990-01-01', 'テスター', 'test.user101@example.com', 'password', 1, false),
+(102, '侍太郎さん', 'サムライ タロウサン', '1010022', '東京都千代田区神田練塀町300番地', '09012345678', NULL, 'エンジニア', 'taro.samurai@example.com2', 'password', 1, true);
 
 /* restaurantsテーブル */
 INSERT IGNORE INTO restaurants (id, name, image, description, lowest_price, highest_price, postal_code, address, opening_time, closing_time, seating_capacity) VALUES

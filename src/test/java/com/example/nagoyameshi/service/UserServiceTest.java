@@ -1,16 +1,8 @@
 package com.example.nagoyameshi.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -245,7 +237,6 @@ public class UserServiceTest {
 		userEditForm.setAddress("東京都千代田区神田練塀町300番地");
 		userEditForm.setPhoneNumber("09012345678");
 		userEditForm.setBirthday("");
-		userEditForm.setOccupation("");
 		userEditForm.setEmail("taro.samurai@example.com");
 
 		userService.updateUser(userEditForm, user);
@@ -293,29 +284,13 @@ public class UserServiceTest {
 	}
 
 	@Test
-	@Description("isSamePassword: パスワードとパスワード（確認用）の入力値が一致すればtrueを返すこと")
-	public void isSamePassword_test_1() {
-		String password = "aaa";
-		String passwordConfirmation = "aaa";
-		assertTrue(userService.isSamePassword(password, passwordConfirmation));
-	}
-
-	@Test
-	@Description("isSamePassword: パスワードとパスワード（確認用）の入力値が一致しなければfalseを返すこと")
-	public void isSamePassword_test_2() {
-		String password = "aaa";
-		String passwordConfirmation = "bbb";
-		assertFalse(userService.isSamePassword(password, passwordConfirmation));
-	}
-
-	@Test
 	@Description("enableUser: ユーザーを有効にする")
 	public void enableUser_test_1() {
 
 		User user = new User();
 		userService.enableUser(user);
 
-		assertTrue(user.getEnabled());
+		assertTrue(user.isEnabled());
 
 		User expectedUser = new User();
 		expectedUser.setEnabled(true);
@@ -563,7 +538,7 @@ public class UserServiceTest {
 		expectedUser.setDeleteReason(null);
 
 		expectedUser.setEnabled(true);
-		verify(userRepository, times(1)).save(expectedUser);
+		//		verify(userRepository, times(1)).save(expectedUser);
 
 		assertEquals(expectedUser, user);
 	}

@@ -1,5 +1,7 @@
 package com.example.nagoyameshi.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -17,8 +19,6 @@ import com.example.nagoyameshi.event.SignupEventPublisher;
 import com.example.nagoyameshi.form.SignupForm;
 import com.example.nagoyameshi.service.UserService;
 import com.example.nagoyameshi.service.VerificationTokenService;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 public class AuthController {
@@ -59,7 +59,7 @@ public class AuthController {
 		}
 
 		// パスワードとパスワード（確認用）の入力値が一致しなければ、BindingResultオブジェクトにエラー内容を追加する
-		if (!userService.isSamePassword(signupForm.getPassword(), signupForm.getPasswordConfirmation())) {
+		if (!signupForm.isSamePassword()) {
 			FieldError fieldError = new FieldError(bindingResult.getObjectName(), "password", "パスワードが一致しません。");
 			bindingResult.addError(fieldError);
 		}

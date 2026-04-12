@@ -15,6 +15,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+
 import lombok.Data;
 import lombok.ToString;
 
@@ -34,7 +35,7 @@ public class Restaurant {
 	@Column(name = "image")
 	private String image;
 
-	@Column(name = "description")
+	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;
 
 	@Column(name = "lowest_price")

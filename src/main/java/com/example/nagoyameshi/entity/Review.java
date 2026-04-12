@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
 import lombok.Data;
 
 @Entity
@@ -21,7 +22,7 @@ public class Review {
 	@Column(name = "id")
 	private Integer id;
 
-	@Column(name = "content")
+	@Column(name = "content", columnDefinition = "TEXT")
 	private String content;
 
 	@Column(name = "score")

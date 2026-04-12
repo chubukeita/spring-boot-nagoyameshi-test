@@ -1,10 +1,6 @@
 package com.example.nagoyameshi.repository;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,21 +16,22 @@ import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.example.nagoyameshi.entity.Role;
 import com.example.nagoyameshi.entity.User;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@TestPropertySource(properties = {
-		"spring.datasource.url=jdbc:h2:mem:testdb;MODE=MySQL;NON_KEYWORDS=DAY;DB_CLOSE_DELAY=-1",
-		"spring.datasource.driverClassName=org.h2.Driver",
-		"spring.datasource.username=sa",
-		"spring.datasource.password=",
-		"spring.sql.init.mode=never",
-		"spring.jpa.hibernate.ddl-auto=create-drop"
-})
+//@TestPropertySource(properties = {
+//		"spring.datasource.url=jdbc:h2:mem:testdb;MODE=MySQL;NON_KEYWORDS=DAY;DB_CLOSE_DELAY=-1",
+//		"spring.datasource.driverClassName=org.h2.Driver",
+//		"spring.datasource.username=sa",
+//		"spring.datasource.password=",
+//		"spring.sql.init.mode=never",
+//		"spring.jpa.hibernate.ddl-auto=create-drop"
+//})
+@ActiveProfiles("repository-test")
 public class UserRepositoryTest {
 
 	@Autowired
@@ -157,7 +154,7 @@ public class UserRepositoryTest {
 				() -> assertEquals(expected.getRole().getName(), actual.getRole().getName(), "role.name"),
 
 				// 状態
-				() -> assertEquals(expected.getEnabled(), actual.getEnabled(), "enabled"),
+				() -> assertEquals(expected.isEnabled(), actual.isEnabled(), "enabled"),
 				() -> assertEquals(expected.getDeletedAt(), actual.getDeletedAt(), "deletedAt"),
 				() -> assertEquals(expected.getDeletedByUser(), actual.getDeletedByUser(), "deletedByUser"),
 				() -> assertEquals(expected.getDeleteReason(), actual.getDeleteReason(), "deleteReason"),
@@ -624,7 +621,8 @@ public class UserRepositoryTest {
 
 		List<User> list = userRepository.findAllIncludeDeleted();
 
-		assertTrue(list.stream().anyMatch(u -> u.getEmail().equals("taro.samurai@example.com") && u.getDeletedAt() != null));
+		assertTrue(list.stream()
+				.anyMatch(u -> u.getEmail().equals("taro.samurai@example.com") && u.getDeletedAt() != null));
 	}
 
 	@Test

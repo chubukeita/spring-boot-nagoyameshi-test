@@ -1,7 +1,6 @@
 package com.example.nagoyameshi.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalTime;
 
@@ -15,20 +14,21 @@ import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.example.nagoyameshi.entity.Restaurant;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@TestPropertySource(properties = {
-		"spring.datasource.url=jdbc:h2:mem:restaurant_repository_test;MODE=MySQL;NON_KEYWORDS=DAY;DB_CLOSE_DELAY=-1",
-		"spring.datasource.driverClassName=org.h2.Driver",
-		"spring.datasource.username=sa",
-		"spring.datasource.password=",
-		"spring.sql.init.mode=never",
-		"spring.jpa.hibernate.ddl-auto=create-drop"
-})
+//@TestPropertySource(properties = {
+//		"spring.datasource.url=jdbc:h2:mem:testdb;MODE=MySQL;NON_KEYWORDS=DAY;DB_CLOSE_DELAY=-1",
+//		"spring.datasource.driverClassName=org.h2.Driver",
+//		"spring.datasource.username=sa",
+//		"spring.datasource.password=",
+//		"spring.sql.init.mode=never",
+//		"spring.jpa.hibernate.ddl-auto=create-drop"
+//})
+@ActiveProfiles("repository-test")
 public class RestaurantRepositoryTest {
 
 	@Autowired
