@@ -56,15 +56,12 @@ public class UserService {
 		user.setPostalCode(signupForm.getPostalCode());
 		user.setAddress(signupForm.getAddress());
 		user.setPhoneNumber(signupForm.getPhoneNumber());
-		user.setOccupation(signupForm.getOccupation());
+		user.setOccupation(toNullIfBlank(signupForm.getOccupation()));
 		user.setEmail(signupForm.getEmail());
 		user.setPassword(passwordEncoder.encode(signupForm.getPassword()));
 		user.setRole(role);
 		user.setEnabled(false);
-
-		if (!signupForm.getBirthday().isEmpty()) {
-			user.setBirthday(LocalDate.parse(signupForm.getBirthday(), DateTimeFormatter.ofPattern("yyyyMMdd")));
-		}
+		user.setBirthday(parseBirthdayOrNull(signupForm.getBirthday()));
 
 		// 認知的複雑性を減らすため、elseの処理は削除して、birthdayはnullのままにする
 
@@ -81,15 +78,31 @@ public class UserService {
 		user.setPostalCode(userEditForm.getPostalCode());
 		user.setAddress(userEditForm.getAddress());
 		user.setPhoneNumber(userEditForm.getPhoneNumber());
-		user.setOccupation(userEditForm.getOccupation());
+		user.setOccupation(toNullIfBlank(userEditForm.getOccupation()));
 		user.setEmail(userEditForm.getEmail());
-
-		if (!userEditForm.getBirthday().isEmpty()) {
-			user.setBirthday(LocalDate.parse(userEditForm.getBirthday(), DateTimeFormatter.ofPattern("yyyyMMdd")));
-		}
+		user.setBirthday(parseBirthdayOrNull(userEditForm.getBirthday()));
 
 		userRepository.save(user);
 
+	}
+
+	// birthdayの文字列をLocalDateに変換する。空文字やスペースのみの場合はnullを返す
+	private LocalDate parseBirthdayOrNull(String birthday) {
+		String normalizedBirthday = toNullIfBlank(birthday);
+		if (normalizedBirthday == null) {
+			return null;
+		}
+
+		return LocalDate.parse(normalizedBirthday, DateTimeFormatter.ofPattern("yyyyMMdd"));
+	}
+
+	// 文字列がnull、空文字、スペースのみの場合はnullを返す。それ以外はtrimした文字列を返す
+	private String toNullIfBlank(String value) {
+		if (value == null || value.trim().isEmpty()) {
+			return null;
+		}
+
+		return value.trim();
 	}
 
 	// メールアドレスが登録済みかどうかをチェックする
