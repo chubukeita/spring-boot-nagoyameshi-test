@@ -178,7 +178,7 @@ public class UserServiceTest {
 		expectedUser.setAddress("東京都千代田区神田練塀町300番地");
 		expectedUser.setPhoneNumber("09012345678");
 		expectedUser.setBirthday(null);
-		expectedUser.setOccupation("");
+		expectedUser.setOccupation(null);
 		expectedUser.setEmail("taro.samurai@example.com");
 		expectedUser.setPassword("$2a$10$2JNjTwZBwo7fprL2X4sv.OEKqxnVtsVQvuXDkI8xVGix.U3W5B7CO");
 		expectedUser.setRole(new Role());
