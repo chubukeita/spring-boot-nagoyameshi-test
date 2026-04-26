@@ -22,8 +22,8 @@ public class Review {
 	@Column(name = "id")
 	private Integer id;
 
-	//	@Column(name = "content")
-	@Column(name = "content", columnDefinition = "TEXT")
+	@Column(name = "content")
+	//	@Column(name = "content", columnDefinition = "TEXT")
 	private String content;
 
 	@Column(name = "score")

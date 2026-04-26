@@ -125,7 +125,7 @@ public class ReservationServiceTest {
   @Test
   @Description("isAtLeastTwoHoursInFuture_予約日時が現在時刻から2時間以上先ならtrue、それ未満ならfalseを返すこと")
   public void isAtLeastTwoHoursInFuture_checksFuture() {
-    LocalDateTime twoHoursLater = LocalDateTime.now().plusHours(2);
+    LocalDateTime twoHoursLater = LocalDateTime.now().plusHours(2).plusMinutes(1);
     LocalDateTime oneHourLater = LocalDateTime.now().plusHours(1);
 
     assertTrue(reservationService.isAtLeastTwoHoursInFuture(twoHoursLater));

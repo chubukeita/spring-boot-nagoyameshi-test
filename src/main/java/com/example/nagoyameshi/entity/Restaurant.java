@@ -35,8 +35,8 @@ public class Restaurant {
 	@Column(name = "image")
 	private String image;
 
-	//	@Column(name = "description")
-	@Column(name = "description", columnDefinition = "TEXT")
+	@Column(name = "description")
+	//	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;
 
 	@Column(name = "lowest_price")

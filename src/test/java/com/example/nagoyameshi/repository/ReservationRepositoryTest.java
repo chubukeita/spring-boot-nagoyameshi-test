@@ -20,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.example.nagoyameshi.entity.Reservation;
 import com.example.nagoyameshi.entity.Restaurant;
+import com.example.nagoyameshi.entity.Role;
 import com.example.nagoyameshi.entity.User;
 
 @DataJpaTest
@@ -48,15 +49,27 @@ public class ReservationRepositoryTest {
 
 	@BeforeEach
 	void setUp() {
+		Role role = new Role();
+		role.setName("ROLE_FREE_MEMBER");
+		role = entityManager.persist(role);
+
 		user = new User();
 		user.setName("テストユーザー");
+		user.setFurigana("テスト ユーザー");
+		user.setPostalCode("4600000");
+		user.setAddress("名古屋市中区");
+		user.setPhoneNumber("09000000000");
 		user.setEmail("test@example.com");
 		user.setPassword("dummy");
+		user.setRole(role);
+		user.setEnabled(true);
 		user = entityManager.persist(user);
 
 		restaurant = new Restaurant();
 		restaurant.setName("テストレストラン");
+		restaurant.setDescription("テスト用レストラン");
 		restaurant.setAddress("名古屋市");
+		restaurant.setPostalCode("4600000");
 		restaurant.setLowestPrice(1000);
 		restaurant.setHighestPrice(3000);
 		restaurant.setOpeningTime(LocalTime.of(10, 0));

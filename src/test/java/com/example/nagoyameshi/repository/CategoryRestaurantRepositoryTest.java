@@ -18,6 +18,8 @@ import com.example.nagoyameshi.entity.Category;
 import com.example.nagoyameshi.entity.CategoryRestaurant;
 import com.example.nagoyameshi.entity.Restaurant;
 
+import java.time.LocalTime;
+
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 //@TestPropertySource(properties = {
@@ -56,6 +58,14 @@ public class CategoryRestaurantRepositoryTest {
 		// テスト用のレストランを作成
 		restaurant = new Restaurant();
 		restaurant.setName("テストレストラン");
+		restaurant.setDescription("テスト用レストラン");
+		restaurant.setLowestPrice(1000);
+		restaurant.setHighestPrice(3000);
+		restaurant.setPostalCode("4600000");
+		restaurant.setAddress("名古屋市中区");
+		restaurant.setOpeningTime(LocalTime.of(10, 0));
+		restaurant.setClosingTime(LocalTime.of(22, 0));
+		restaurant.setSeatingCapacity(20);
 		entityManager.persist(restaurant);
 
 		// テスト用のカテゴリレストランを作成
