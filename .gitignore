@@ -33,5 +33,5 @@ build/
 .vscode/
 
 /src/main/resources/application.properties
-/src/main/resources/application-test.properties
+# /src/main/resources/application-test.properties
 /.apt_generated_tests/
