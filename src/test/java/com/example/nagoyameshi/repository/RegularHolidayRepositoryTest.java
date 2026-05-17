@@ -25,7 +25,7 @@ import com.example.nagoyameshi.entity.RegularHoliday;
 //		"spring.sql.init.mode=never",
 //		"spring.jpa.hibernate.ddl-auto=create-drop"
 //})
-@ActiveProfiles("repository-test")
+@ActiveProfiles("test")
 public class RegularHolidayRepositoryTest {
 
 	@Autowired

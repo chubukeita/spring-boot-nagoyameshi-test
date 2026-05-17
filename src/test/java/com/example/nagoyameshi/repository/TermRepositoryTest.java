@@ -23,7 +23,7 @@ import com.example.nagoyameshi.entity.Term;
 //		"spring.sql.init.mode=never",
 //		"spring.jpa.hibernate.ddl-auto=create-drop"
 //})
-@ActiveProfiles("repository-test")
+@ActiveProfiles("test")
 public class TermRepositoryTest {
 
 	@Autowired

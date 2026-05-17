@@ -28,7 +28,7 @@ import com.example.nagoyameshi.entity.Category;
 //		"spring.sql.init.mode=never",
 //		"spring.jpa.hibernate.ddl-auto=create-drop"
 //})
-@ActiveProfiles("repository-test")
+@ActiveProfiles("test")
 public class CategoryRepositoryTest {
 
 	@Autowired

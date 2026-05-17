@@ -76,6 +76,14 @@ public class UserService {
 	//	@Transactional
 	public void updateUser(UserEditForm userEditForm, User user) {
 
+		// userEditForm.getBirthday()が空か、nullか？
+		System.out.println("userEditForm.getBirthday():" + userEditForm.getBirthday());
+		System.out.println("①userEditForm.getBirthday()はnullかどうか");
+		System.out.println(userEditForm.getBirthday() == null);
+		System.out.println("②userEditForm.getBirthday()は空文字かどうか（文字数が0文字かどうか）");
+		System.out.println(userEditForm.getBirthday().isEmpty());
+		System.out.println("user.getBirthday():" + user.getBirthday());
+
 		user.setName(userEditForm.getName());
 		user.setFurigana(userEditForm.getFurigana());
 		user.setPostalCode(userEditForm.getPostalCode());
@@ -84,9 +92,20 @@ public class UserService {
 		user.setOccupation(userEditForm.getOccupation());
 		user.setEmail(userEditForm.getEmail());
 
+		// user.setBirthday(null);をしたらsetBirthday(null)を比較して、誕生日が未設定になる理由
+
 		if (!userEditForm.getBirthday().isEmpty()) {
 			user.setBirthday(LocalDate.parse(userEditForm.getBirthday(), DateTimeFormatter.ofPattern("yyyyMMdd")));
+		} else {
+			user.setBirthday(null);
 		}
+
+		// userのbirthdayにnullをsetしたのちに、userEditForm.getBirthday()が空か、nullか？
+		// user.setBirthday(null);
+		// System.out.println("userEditForm.getBirthday():" + userEditForm.getBirthday());
+		// System.out.println("userEditForm.getBirthday()=null" + userEditForm.getBirthday() == null);
+		// System.out.println("userEditForm.getBirthday()は文字数が0文字かどうか" + userEditForm.getBirthday().isEmpty());
+		// System.out.println("user.getBirthday():" + user.getBirthday());
 
 		userRepository.save(user);
 

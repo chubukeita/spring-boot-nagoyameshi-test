@@ -23,7 +23,7 @@ import com.example.nagoyameshi.entity.Company;
 //		"spring.sql.init.mode=never",
 //		"spring.jpa.hibernate.ddl-auto=create-drop"
 //})
-@ActiveProfiles("repository-test")
+@ActiveProfiles("test")
 public class CompanyRepositoryTest {
 
 	@Autowired

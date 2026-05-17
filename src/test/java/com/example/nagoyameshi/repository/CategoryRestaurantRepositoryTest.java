@@ -2,6 +2,7 @@ package com.example.nagoyameshi.repository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,8 +19,6 @@ import com.example.nagoyameshi.entity.Category;
 import com.example.nagoyameshi.entity.CategoryRestaurant;
 import com.example.nagoyameshi.entity.Restaurant;
 
-import java.time.LocalTime;
-
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 //@TestPropertySource(properties = {
@@ -30,7 +29,7 @@ import java.time.LocalTime;
 //		"spring.sql.init.mode=never",
 //		"spring.jpa.hibernate.ddl-auto=create-drop"
 //})
-@ActiveProfiles("repository-test")
+@ActiveProfiles("test")
 public class CategoryRestaurantRepositoryTest {
 	@Autowired
 	private TestEntityManager entityManager;

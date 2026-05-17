@@ -25,7 +25,7 @@ import com.example.nagoyameshi.entity.VerificationToken;
 //		"spring.sql.init.mode=never",
 //		"spring.jpa.hibernate.ddl-auto=create-drop"
 //})
-@ActiveProfiles("repository-test")
+@ActiveProfiles("test")
 public class VerificationTokenRepositoryTest {
 
 	@Autowired

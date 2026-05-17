@@ -155,14 +155,13 @@ public class UserServiceTest {
 		signupForm.setPostalCode("1010022");
 		signupForm.setAddress("東京都千代田区神田練塀町300番地");
 		signupForm.setPhoneNumber("09012345678");
-		signupForm.setBirthday("");
+		signupForm.setBirthday(""); // signupFormのbirthdayはString型なので、フォームが未入力であった場合に、空文字として扱われる。
 		signupForm.setOccupation("");
 		signupForm.setEmail("taro.samurai@example.com");
 		signupForm.setPassword("password");
 
 		// 実装のuserRepository.save(user);を実行した時に返されるUser型のインスタンスをそのままreturnするように指定する。
-		// thenReturn(new
-		// User()):としてしまうと、せっかくcreateUser()メソッドで、各種フィールドをセットしたuserが返されず、nullが返されてしまう。
+		// thenReturn(new User()):としてしまうと、せっかくcreateUser()メソッドで、各種フィールドをセットしたuserが返されず、nullが返されてしまう。
 		when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 		when(roleRepository.findByName("ROLE_FREE_MEMBER")).thenReturn(new Role());
 		when(passwordEncoder.encode(signupForm.getPassword()))
@@ -177,8 +176,8 @@ public class UserServiceTest {
 		expectedUser.setPostalCode("1010022");
 		expectedUser.setAddress("東京都千代田区神田練塀町300番地");
 		expectedUser.setPhoneNumber("09012345678");
-		expectedUser.setBirthday(null);
-		expectedUser.setOccupation(null);
+		expectedUser.setBirthday(null); // createUser()メソッドの中で、signupForm.getBirthday()が空文字であった場合に、!signupForm.getBirthday().isEmpty()がtrueとなった結果、userのbirthdayには何もデータが入らない→UserクラスのString型のデフォルト値であるため、user.setBirthday(null);となり、expectedUserのbirthdayもnullになる。。
+		expectedUser.setOccupation("");
 		expectedUser.setEmail("taro.samurai@example.com");
 		expectedUser.setPassword("$2a$10$2JNjTwZBwo7fprL2X4sv.OEKqxnVtsVQvuXDkI8xVGix.U3W5B7CO");
 		expectedUser.setRole(new Role());
