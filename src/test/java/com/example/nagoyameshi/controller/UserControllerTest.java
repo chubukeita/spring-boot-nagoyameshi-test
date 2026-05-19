@@ -25,7 +25,7 @@ import com.example.nagoyameshi.service.UserService;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-@Sql("/sql/controller/UserControllerTest/base-state.sql")
+@Sql("/test.sql")
 public class UserControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
