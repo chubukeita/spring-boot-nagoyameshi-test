@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -83,10 +84,11 @@ public class UserRepositoryTest {
 
 	// 会員の太郎さんを退会させるメソッド
 	private void markActiveTaroAsDeleted() {
-		User managedActiveTaro = entityManager.find(User.class, activeTaro.getId()); // これで managed になる
+		Integer activeTaroId = activeTaro.getId();
+		this.activeTaro = entityManager.find(User.class, activeTaroId); // これで managed になる
 
-		managedActiveTaro.setEnabled(false);
-		managedActiveTaro.setDeletedAt(LocalDateTime.of(2025, 1, 1, 0, 0, 0));
+		activeTaro.setEnabled(false);
+		activeTaro.setDeletedAt(LocalDateTime.of(2025, 1, 1, 0, 0, 0));
 
 		entityManager.flush();
 		entityManager.clear();
@@ -343,7 +345,28 @@ public class UserRepositoryTest {
 	}
 
 	@Test
-	@Description("findAllActive__ページングが正しく行われること")
+	@Description("findByEmailAndDeletedAtIsNotNull_指定したメールアドレスに一致した退会ユーザーを取得できること")
+	public void findByEmailAndDeletedAtIsNotNull_test1() throws Exception {
+		// 太郎さんが退会する
+		markActiveTaroAsDeleted();
+
+		// 太郎さんは退会済みになっているので、Userを取得できる想定
+		User actualTaro = userRepository.findByEmailAndDeletedAtIsNotNull("taro.samurai@example.com").orElse(null);
+
+		assertEquals(activeTaro, actualTaro);
+	}
+
+	@Test
+	@Description("findByEmailAndDeletedAtIsNotNull_指定したメールアドレスに一致した会員ユーザーを取得できること（太郎さんが復会したらUserを取得できなくなること）")
+	public void findByEmailAndDeletedAtIsNotNull_test2() throws Exception {
+
+		User actualTaro = userRepository.findByEmailAndDeletedAtIsNotNull("taro.samurai@example.com").orElse(null);
+
+		assertNull(actualTaro);
+	}
+
+	@Test
+	@Description("findAllActive_ページングが正しく行われること")
 	public void findAllActive_test1() throws Exception {
 
 		// ページネーションの動作を検証するため、count=13とし、既存3件(Taro、Jiro、Hanako) + 13件 = 16件にする。
@@ -479,7 +502,7 @@ public class UserRepositoryTest {
 	@Test
 	@Description("findByEmailAndDeletedAtIsNull_メールアドレスが一致し、かつ削除されていないユーザーを取得できること")
 	public void findByEmailAndDeletedAtIsNull_test_1() throws Exception {
-		var actualUser = userRepository.findByEmailAndDeletedAtIsNull("taro.samurai@example.com");
+		Optional<User> actualUser = userRepository.findByEmailAndDeletedAtIsNull("taro.samurai@example.com");
 
 		assertTrue(actualUser.isPresent());
 		assertEquals(activeTaro, actualUser.get());
@@ -490,7 +513,7 @@ public class UserRepositoryTest {
 	public void findByEmailAndDeletedAtIsNull_test_2() throws Exception {
 		markActiveTaroAsDeleted();
 
-		var actualUser = userRepository.findByEmailAndDeletedAtIsNull("taro.samurai@example.com");
+		Optional<User> actualUser = userRepository.findByEmailAndDeletedAtIsNull("taro.samurai@example.com");
 
 		assertTrue(actualUser.isEmpty());
 	}
@@ -498,7 +521,34 @@ public class UserRepositoryTest {
 	@Test
 	@Description("findByEmailAndDeletedAtIsNull_存在しないメールアドレスで検索した場合、空のOptionalが返ること")
 	public void findByEmailAndDeletedAtIsNull_test_3() throws Exception {
-		var actualUser = userRepository.findByEmailAndDeletedAtIsNull("notfound@example.com");
+		Optional<User> actualUser = userRepository.findByEmailAndDeletedAtIsNull("notfound@example.com");
+
+		assertTrue(actualUser.isEmpty());
+	}
+
+	@Test
+	@Description("findByEmailAndDeletedAtIsNotNull_削除済みユーザーのメールアドレスで検索した場合、該当ユーザーを取得できること")
+	public void findByEmailAndDeletedAtIsNotNull_test_1() throws Exception {
+		markActiveTaroAsDeleted();
+
+		Optional<User> actualUser = userRepository.findByEmailAndDeletedAtIsNotNull("taro.samurai@example.com");
+
+		assertTrue(actualUser.isPresent());
+		assertEquals(activeTaro, actualUser.get());
+	}
+
+	@Test
+	@Description("findByEmailAndDeletedAtIsNotNull_未削除ユーザーのメールアドレスで検索した場合、空のOptionalが返ること")
+	public void findByEmailAndDeletedAtIsNotNull_test_2() throws Exception {
+		Optional<User> actualUser = userRepository.findByEmailAndDeletedAtIsNotNull("taro.samurai@example.com");
+
+		assertTrue(actualUser.isEmpty());
+	}
+
+	@Test
+	@Description("findByEmailAndDeletedAtIsNotNull_存在しないメールアドレスで検索した場合、空のOptionalが返ること")
+	public void findByEmailAndDeletedAtIsNotNull_test_3() throws Exception {
+		Optional<User> actualUser = userRepository.findByEmailAndDeletedAtIsNotNull("notfound@example.com");
 
 		assertTrue(actualUser.isEmpty());
 	}

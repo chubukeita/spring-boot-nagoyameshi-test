@@ -17,14 +17,17 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
 	public long countByRole_Name(String roleName);
 
-	Optional<User> findByEmailAndDeletedAtIsNull(String email);
+	public Optional<User> findByEmailAndDeletedAtIsNull(String email);
+
+	// メールアドレスが一致する退会ユーザーを取得する
+	public Optional<User> findByEmailAndDeletedAtIsNotNull(String email);
 
 	@Query("SELECT u FROM User u WHERE u.deletedAt IS NULL")
 	Page<User> findAllActive(Pageable pageable);
 
 	@Query("SELECT u FROM User u WHERE u.deletedAt IS NULL AND (u.name LIKE :nameKeyword OR u.furigana LIKE :furiganaKeyword)")
-	Page<User> findActiveByNameLikeOrFuriganaLike(String nameKeyword, String furiganaKeyword, Pageable pageable);
+	public Page<User> findActiveByNameLikeOrFuriganaLike(String nameKeyword, String furiganaKeyword, Pageable pageable);
 
 	@Query("SELECT u FROM User u ORDER BY u.deletedAt ASC, u.id ASC")
-	List<User> findAllIncludeDeleted(); // 管理一覧用（退会含む）
+	public List<User> findAllIncludeDeleted(); // 管理一覧用（退会含む）
 }

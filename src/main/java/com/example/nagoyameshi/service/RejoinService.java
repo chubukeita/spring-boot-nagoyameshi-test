@@ -8,9 +8,7 @@ import com.example.nagoyameshi.entity.RejoinToken;
 import com.example.nagoyameshi.entity.User;
 import com.example.nagoyameshi.event.RejoinEventPublisher;
 import com.example.nagoyameshi.repository.UserRepository;
-import com.example.nagoyameshi.service.error.AlreadyEnabledException;
-import com.example.nagoyameshi.service.error.InvalidTokenException;
-import com.example.nagoyameshi.service.error.RejoinUserNotFoundException;
+import com.example.nagoyameshi.service.errorMessage.RejoinResult;
 
 @Service
 public class RejoinService {
@@ -36,45 +34,21 @@ public class RejoinService {
 		return rejoinTokenService.findRejoinTokenByToken(token) != null;
 	}
 
-	// if (rejoinToken == null) {
-	//	String errorMessage = "トークンが無効です。恐れ入りますが、再度メール認証からやり直してください。";
-	//	model.addAttribute("errorMessage", errorMessage);
-	//	return "auth/invalid";
-	//}
-
-	// void→String エラーの時はstring 成功時はnull?? 
-	// returnでメッセージと結果を含んだクラスを作って、(rejoin)Resultオブジェクトをbooleanでfalse、成功時trueを返す。
-	// errorパッケージも消して、RejoinControllerのsuccessMessageやerrorMessageはまとめておく
-	// 一つのクラスにまとめてstaticで呼ぶ。
-
-	// ○○という理由でエラーになりました。
-	// どうしたらrejoinできるのかを知りたい。
-	// そういった設計で考えて、導線を考える
-	// ユーザーの次のアクションを伝える。もう一度やり直し、メールをもう一回投げる、URLどこにアクセスすればいいか？
-	// やり直すところはどこか？
-	// ユーザーが何をすればよいのか、どうすればいいのかを伝えるメッセージも入れる。
-
-	// どういう画面にしたいのか
-	// どの画面を出すのか、使いまわし、新しい画面なのか、既存なのか、新規で画面を作るのか
-
 	@Transactional
-	public void rejoin(String token) {
+	public RejoinResult rejoin(String token) {
 		RejoinToken rejoinToken = rejoinTokenService.findRejoinTokenByToken(token);
 
 		if (rejoinToken == null) {
-			throw new InvalidTokenException();
+			return RejoinResult.invalidTokenError();
 		}
 
 		User user = userService.findUserByEmail(rejoinToken.getEmail());
-
-		// model.setAttributeで渡す（）
-		// 例外ハンドラーを作る。
 		if (user == null) {
-			throw new RejoinUserNotFoundException();
+			return RejoinResult.userNotFoundError();
 		}
 
 		if (user.isEnabled()) {
-			throw new AlreadyEnabledException();
+			return RejoinResult.alreadyEnabledError();
 		}
 
 		user.setDeletedAt(null);
@@ -84,5 +58,7 @@ public class RejoinService {
 
 		userRepository.save(user);
 		rejoinTokenService.deleteByToken(token);
+
+		return RejoinResult.success();
 	}
 }

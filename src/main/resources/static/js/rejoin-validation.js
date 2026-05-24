@@ -1,7 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
   const emailInput = document.getElementById("email");
   const submitButton = document.getElementById("rejoinButton");
-  if (!emailInput || !submitButton) return;
+  const rejoinForm = submitButton?.closest("form");
+  if (!emailInput || !submitButton || !rejoinForm) return;
+
+  let isSubmitting = false;
 
   let errorMessage = document.getElementById("emailError");
   if (!errorMessage) {
@@ -14,6 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const validate = () => {
+    if (isSubmitting) return;
+
     const value = (emailInput.value || "").trim();
     if (value.length === 0) {
       errorMessage.textContent = "メールアドレスを入力してください。";
@@ -30,5 +35,24 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   emailInput.addEventListener("input", validate);
+
+  rejoinForm.addEventListener("submit", (event) => {
+    // Prevent duplicate submission requests caused by rapid repeated clicks.
+    if (isSubmitting) {
+      event.preventDefault();
+      return;
+    }
+
+    validate();
+    if (submitButton.disabled) {
+      event.preventDefault();
+      return;
+    }
+
+    isSubmitting = true;
+    submitButton.disabled = true;
+    submitButton.textContent = "送信中...";
+  });
+
   validate();
 });

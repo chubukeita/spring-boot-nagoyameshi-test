@@ -62,6 +62,7 @@ public class UserService {
 		user.setRole(role);
 		user.setEnabled(false);
 
+		// occupationは空文字登録、birthdayはnull登録
 		if (!signupForm.getBirthday().isEmpty()) {
 			user.setBirthday(LocalDate.parse(signupForm.getBirthday(), DateTimeFormatter.ofPattern("yyyyMMdd")));
 		}
@@ -160,6 +161,11 @@ public class UserService {
 	// 指定したメールアドレスを持つユーザーを取得する
 	public User findUserByEmail(String email) {
 		return userRepository.findByEmail(email);
+	}
+
+	// 指定したメールアドレスを持つ退会ユーザーを取得する
+	public Optional<User> findDeletedUserByEmail(String email) {
+		return userRepository.findByEmailAndDeletedAtIsNotNull(email);
 	}
 
 	@Transactional

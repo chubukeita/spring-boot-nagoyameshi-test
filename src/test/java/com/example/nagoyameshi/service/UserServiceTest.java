@@ -1,8 +1,16 @@
 package com.example.nagoyameshi.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -437,6 +445,24 @@ public class UserServiceTest {
 		verify(userRepository, times(1)).findByEmail(expectedEmail);
 		User expectedUser = new User();
 		assertEquals(expectedUser, user2);
+	}
+
+	@Test
+	@Description("findDeletedUserByEmail: 指定したメールアドレスを持つ退会ユーザーを取得すること")
+	public void findDeletedUserByEmail_test_1() {
+
+		String email = "taro.samurai@example.com";
+
+		when(userRepository.findByEmailAndDeletedAtIsNotNull(email)).thenReturn(Optional.ofNullable(new User()));
+
+		Optional<User> user2 = userService.findDeletedUserByEmail(email);
+
+		String expectedEmail = "taro.samurai@example.com";
+
+		verify(userRepository, times(1)).findByEmailAndDeletedAtIsNotNull(expectedEmail);
+		User expectedUser = new User();
+
+		assertEquals(expectedUser, user2.get());
 	}
 
 	@Test

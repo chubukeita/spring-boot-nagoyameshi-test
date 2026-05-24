@@ -1,31 +1,63 @@
 <!DOCTYPE html>
-<html xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-    <head>
-        <div th:replace="~{fragment :: meta}"></div>
+<html xmlns:th="https://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-        <div th:replace="~{fragment :: styles}"></div>
+<head>
+    <div th:replace="~{fragment :: meta}"></div>
+    <div th:replace="~{fragment :: styles}"></div>
 
-        <title>メール認証</title>
-    </head>
-    <body>
-        <div class="nagoyameshi-wrapper">
-            <div th:replace="~{fragment :: header}"></div>
+    <title>メール認証</title>
+</head>
 
-            <main>
-                <div class="container pt-4 pb-5 nagoyameshi-container">
-                    <div th:if="${successMessage}" class="alert alert-info">
-                        <span th:text="${successMessage}"></span>
-                    </div>
-					
-                    <div th:if="${errorMessage}" class="alert alert-danger">
+<body>
+    <div class="nagoyameshi-wrapper">
+        <div th:replace="~{fragment :: header}"></div>
+
+        <main>
+            <div class="container pt-4 pb-5 nagoyameshi-container text-center">
+
+                <!-- 成功メッセージ -->
+                <div th:if="${successMessage}"
+                     class="alert alert-info mx-auto nagoyameshi-auth-box">
+                    <span th:text="${successMessage}"></span>
+                </div>
+
+                <!-- エラー表示 -->
+                <div th:if="${errorMessage}">
+
+                    <h2 class="fw-bold mb-4">
+                        <span th:if="${errorId != null}"
+                              th:text="'<< ' + ${errorId} + ' >> '"></span>
+                        エラーが発生しました。
+                    </h2>
+
+                    <div class="alert alert-danger fw-bold mx-auto nagoyameshi-auth-box">
                         <span th:text="${errorMessage}"></span>
                     </div>
+
+                    <div th:if="${nextActionMessage}"
+                         class="alert alert-danger mx-auto nagoyameshi-auth-box">
+                        <span th:utext="${nextActionMessage}"></span>
+                    </div>
+
                 </div>
-            </main>
 
-            <div th:replace="~{fragment :: footer}"></div>
-        </div>
+                <!-- 共通ボタン -->
+                <div class="mt-5">
+                    <a th:if="${buttonText != null and buttonUrl != null}"
+                       th:href="@{${buttonUrl}}"
+                       class="btn text-white shadow-sm nagoyameshi-btn">
+                        <span th:text="${buttonText}"></span>
+                    </a>
+                </div>
 
-        <div th:replace="~{fragment :: scripts}"></div>
-  </body>
+            </div>
+        </main>
+
+        <div th:replace="~{fragment :: footer}"></div>
+    </div>
+
+    <div th:replace="~{fragment :: scripts}"></div>
+</body>
+
 </html>

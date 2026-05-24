@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.example.nagoyameshi.entity.RejoinToken;
 import com.example.nagoyameshi.form.RejoinForm;
 import com.example.nagoyameshi.service.RejoinService;
 import com.example.nagoyameshi.service.RejoinTokenService;
 import com.example.nagoyameshi.service.UserService;
+import com.example.nagoyameshi.service.errorMessage.RejoinResult;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -68,17 +68,18 @@ public class RejoinController {
 
 	@GetMapping("/verify")
 	public String verify(@RequestParam(name = "token") String token, Model model) {
-		RejoinToken rejoinToken = rejoinTokenService.findRejoinTokenByToken(token);
+		RejoinResult result = rejoinService.rejoin(token);
 
-		if (rejoinToken == null) {
-			String errorMessage = "トークンが無効です。恐れ入りますが、再度メール認証からやり直してください。";
-			model.addAttribute("errorMessage", errorMessage);
-			return "auth/invalid";
+		if (result.isSuccess()) {
+			model.addAttribute("successMessage", result.getSuccessMessage());
+		} else {
+			model.addAttribute("errorId", result.getErrorId());
+			model.addAttribute("errorMessage", result.getErrorMessage());
+			model.addAttribute("nextActionMessage", result.getNextActionMessage());
 		}
 
-		rejoinService.rejoin(token);
-		String successMessage = "再入会が完了しました。ログインパスワードは過去に本アプリで使用していたパスワードを引き続きご利用ください。";
-		model.addAttribute("successMessage", successMessage);
+		model.addAttribute("buttonText", result.getButtonText());
+		model.addAttribute("buttonUrl", result.getButtonUrl());
 
 		return "rejoin/verify";
 	}

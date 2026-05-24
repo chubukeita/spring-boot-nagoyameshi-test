@@ -1,7 +1,11 @@
 package com.example.nagoyameshi.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,9 +19,7 @@ import com.example.nagoyameshi.entity.RejoinToken;
 import com.example.nagoyameshi.entity.User;
 import com.example.nagoyameshi.event.RejoinEventPublisher;
 import com.example.nagoyameshi.repository.UserRepository;
-import com.example.nagoyameshi.service.error.AlreadyEnabledException;
-import com.example.nagoyameshi.service.error.InvalidTokenException;
-import com.example.nagoyameshi.service.error.RejoinUserNotFoundException;
+import com.example.nagoyameshi.service.errorMessage.RejoinResult;
 
 @ExtendWith(MockitoExtension.class)
 public class RejoinServiceTest {
@@ -67,18 +69,20 @@ public class RejoinServiceTest {
 	}
 
 	@Test
-	@Description("rejoin_無効なトークンの場合は例外が送出されること")
+	@Description("rejoin_無効なトークンの場合はエラー結果が返ること")
 	public void rejoin_test_1() {
 		when(rejoinTokenService.findRejoinTokenByToken("token"))
 				.thenReturn(null);
 
-		assertThrows(
-				InvalidTokenException.class,
-				() -> rejoinService.rejoin("token"));
+		RejoinResult result = rejoinService.rejoin("token");
+
+		assertFalse(result.isSuccess());
+		assertEquals(2, result.getErrorId());
+		assertEquals("トークンが無効です。", result.getErrorMessage());
 	}
 
 	@Test
-	@Description("rejoin_ユーザーが存在しない場合は例外が送出されること")
+	@Description("rejoin_ユーザーが存在しない場合はエラー結果が返ること")
 	public void rejoin_test_2() {
 		RejoinToken token = new RejoinToken();
 		token.setEmail("user@example.com");
@@ -88,13 +92,15 @@ public class RejoinServiceTest {
 		when(userService.findUserByEmail("user@example.com"))
 				.thenReturn(null);
 
-		assertThrows(
-				RejoinUserNotFoundException.class,
-				() -> rejoinService.rejoin("token"));
+		RejoinResult result = rejoinService.rejoin("token");
+
+		assertFalse(result.isSuccess());
+		assertEquals(3, result.getErrorId());
+		assertEquals("該当メールアドレスのユーザーが見つかりません。", result.getErrorMessage());
 	}
 
 	@Test
-	@Description("rejoin_すでに有効化されているユーザーの場合は例外が送出されること")
+	@Description("rejoin_すでに有効化されているユーザーの場合はエラー結果が返ること")
 	public void rejoin_test_3() {
 		RejoinToken token = new RejoinToken();
 		token.setEmail("user@example.com");
@@ -108,9 +114,11 @@ public class RejoinServiceTest {
 		when(userService.findUserByEmail("user@example.com"))
 				.thenReturn(user);
 
-		assertThrows(
-				AlreadyEnabledException.class,
-				() -> rejoinService.rejoin("token"));
+		RejoinResult result = rejoinService.rejoin("token");
+
+		assertFalse(result.isSuccess());
+		assertEquals(1, result.getErrorId());
+		assertEquals("既にご利用中のアカウントです。", result.getErrorMessage());
 	}
 
 	@Test
@@ -131,11 +139,13 @@ public class RejoinServiceTest {
 		when(userService.findUserByEmail("user@example.com"))
 				.thenReturn(user);
 
-		rejoinService.rejoin("token");
+		RejoinResult result = rejoinService.rejoin("token");
 
 		assertNull(user.getDeletedAt());
 		assertNull(user.getDeletedByUser());
 		assertNull(user.getDeleteReason());
+		assertTrue(result.isSuccess());
+		assertEquals("再入会が完了しました。ログインパスワードは過去に本アプリで使用していたパスワードを引き続きご利用ください。", result.getSuccessMessage());
 
 		verify(userService).enableUser(user);
 		verify(userRepository).save(user);

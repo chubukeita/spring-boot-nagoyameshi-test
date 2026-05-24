@@ -21,11 +21,11 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.BindingResult;
 
-import com.example.nagoyameshi.entity.RejoinToken;
 import com.example.nagoyameshi.form.RejoinForm;
 import com.example.nagoyameshi.service.RejoinService;
 import com.example.nagoyameshi.service.RejoinTokenService;
 import com.example.nagoyameshi.service.UserService;
+import com.example.nagoyameshi.service.errorMessage.RejoinResult;
 
 @WebMvcTest(RejoinController.class)
 public class RejoinControllerUnitTest {
@@ -92,34 +92,98 @@ public class RejoinControllerUnitTest {
 
   @WithMockUser
   @Test
-  @Description("GET /rejoin/verify 無効トークンならエラーページを表示する")
+  @Description("GET /rejoin/verify 無効トークンならverify画面にエラーを表示する")
   public void verify_test_1() throws Exception {
-    when(rejoinTokenService.findRejoinTokenByToken("invalid"))
-        .thenReturn(null);
+    when(rejoinService.rejoin("invalid"))
+        .thenReturn(RejoinResult.error(
+            2,
+            "トークンが無効です。",
+            "恐れ入りますが、一度開いたURLを再度開くことはできないので、再度メール認証からやり直してください。",
+            "再入会手続きへ",
+            "/rejoin"));
 
     mockMvc.perform(get("/rejoin/verify").param("token", "invalid"))
         .andExpect(status().isOk())
-        .andExpect(view().name("auth/invalid"))
+        .andExpect(view().name("rejoin/verify"))
+        .andExpect(model().attribute("errorId", 2))
         .andExpect(model().attribute("errorMessage",
-            "トークンが無効です。恐れ入りますが、再度メール認証からやり直してください。"));
+            "トークンが無効です。"))
+        .andExpect(model().attribute("nextActionMessage",
+            "恐れ入りますが、一度開いたURLを再度開くことはできないので、再度メール認証からやり直してください。"))
+        .andExpect(model().attribute("buttonText", "再入会手続きへ"))
+        .andExpect(model().attribute("buttonUrl", "/rejoin"));
 
-    verify(rejoinTokenService).findRejoinTokenByToken("invalid");
+    verify(rejoinService).rejoin("invalid");
   }
 
   @WithMockUser
   @Test
   @Description("GET /rejoin/verify 有効トークンなら再入会処理を行い確認画面を表示する")
   public void verify_test_2() throws Exception {
-    when(rejoinTokenService.findRejoinTokenByToken("valid"))
-        .thenReturn(new RejoinToken());
+    when(rejoinService.rejoin("valid"))
+        .thenReturn(RejoinResult.success(
+            "再入会が完了しました。ログインパスワードは過去に本アプリで使用していたパスワードを引き続きご利用ください。",
+            "ログインページへ",
+            "/login"));
 
     mockMvc.perform(get("/rejoin/verify").param("token", "valid"))
         .andExpect(status().isOk())
         .andExpect(view().name("rejoin/verify"))
         .andExpect(model().attribute("successMessage",
-            "再入会が完了しました。ログインパスワードは過去に本アプリで使用していたパスワードを引き続きご利用ください。"));
+            "再入会が完了しました。ログインパスワードは過去に本アプリで使用していたパスワードを引き続きご利用ください。"))
+        .andExpect(model().attribute("buttonText", "ログインページへ"))
+        .andExpect(model().attribute("buttonUrl", "/login"));
 
-    verify(rejoinTokenService).findRejoinTokenByToken("valid");
     verify(rejoinService).rejoin("valid");
+  }
+
+  @WithMockUser
+  @Test
+  @Description("GET /rejoin/verify 既に入会済みの場合はverify画面にID1エラーを表示する")
+  public void verify_test_3() throws Exception {
+    when(rejoinService.rejoin("alreadyEnabled"))
+        .thenReturn(RejoinResult.error(
+            1,
+            "既にご利用中のアカウントです。",
+            "現在入会中です。以下のボタンより、ホーム画面に戻って引き続き本サービスをご利用いただけます。",
+            "ホームへ戻る",
+            "/"));
+
+    mockMvc.perform(get("/rejoin/verify").param("token", "alreadyEnabled"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("rejoin/verify"))
+        .andExpect(model().attribute("errorId", 1))
+        .andExpect(model().attribute("errorMessage", "既にご利用中のアカウントです。"))
+        .andExpect(model().attribute("nextActionMessage",
+            "現在入会中です。以下のボタンより、ホーム画面に戻って引き続き本サービスをご利用いただけます。"))
+        .andExpect(model().attribute("buttonText", "ホームへ戻る"))
+        .andExpect(model().attribute("buttonUrl", "/"));
+
+    verify(rejoinService).rejoin("alreadyEnabled");
+  }
+
+  @WithMockUser
+  @Test
+  @Description("GET /rejoin/verify ユーザー未存在の場合はverify画面にID3エラーを表示する")
+  public void verify_test_4() throws Exception {
+    when(rejoinService.rejoin("missingUser"))
+        .thenReturn(RejoinResult.error(
+            3,
+            "該当メールアドレスのユーザーが見つかりません。",
+            "恐れ入りますが、登録したメールアドレスをご確認のうえ、再度メール認証からやり直してください。",
+            "再入会手続きへ",
+            "/rejoin"));
+
+    mockMvc.perform(get("/rejoin/verify").param("token", "missingUser"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("rejoin/verify"))
+        .andExpect(model().attribute("errorId", 3))
+        .andExpect(model().attribute("errorMessage", "該当メールアドレスのユーザーが見つかりません。"))
+        .andExpect(model().attribute("nextActionMessage",
+            "恐れ入りますが、登録したメールアドレスをご確認のうえ、再度メール認証からやり直してください。"))
+        .andExpect(model().attribute("buttonText", "再入会手続きへ"))
+        .andExpect(model().attribute("buttonUrl", "/rejoin"));
+
+    verify(rejoinService).rejoin("missingUser");
   }
 }

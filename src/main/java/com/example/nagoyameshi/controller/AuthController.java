@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.nagoyameshi.entity.User;
 import com.example.nagoyameshi.entity.VerificationToken;
 import com.example.nagoyameshi.event.SignupEventPublisher;
+import com.example.nagoyameshi.form.RejoinForm;
 import com.example.nagoyameshi.form.SignupForm;
 import com.example.nagoyameshi.service.UserService;
 import com.example.nagoyameshi.service.VerificationTokenService;
@@ -62,6 +63,16 @@ public class AuthController {
 		if (!signupForm.isSamePassword()) {
 			FieldError fieldError = new FieldError(bindingResult.getObjectName(), "password", "パスワードが一致しません。");
 			bindingResult.addError(fieldError);
+		}
+
+		// 一度退会したユーザーが、再入会画面に気づくことなく、新規会員登録画面から再入会しようとした場合は、再入会画面へ遷移する。
+		// この時、新規会員登録画面で入力されたメールアドレスが、再入会画面のメールアドレス欄へ自動的に追加入力されること。
+		// もし論理削除されているメールアドレスと、本画面から入力されたメールアドレスが一致する場合は、rejoin.htmlにreturnし、入力したメールアドレスが登録メールアドレスに入っている状態となる。
+		if (!userService.findDeletedUserByEmail(signupForm.getEmail()).isEmpty()) {
+			RejoinForm rejoinForm = new RejoinForm();
+			rejoinForm.setEmail(signupForm.getEmail());
+			redirectAttributes.addFlashAttribute("rejoinForm", rejoinForm);
+			return "redirect:/rejoin";
 		}
 
 		if (bindingResult.hasErrors()) {
