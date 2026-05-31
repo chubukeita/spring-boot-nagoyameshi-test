@@ -17,7 +17,6 @@ import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.ActiveProfiles;
 
 import com.example.nagoyameshi.entity.Role;
 import com.example.nagoyameshi.entity.User;
@@ -32,7 +31,7 @@ import com.example.nagoyameshi.entity.User;
 //		"spring.sql.init.mode=never",
 //		"spring.jpa.hibernate.ddl-auto=create-drop"
 //})
-@ActiveProfiles("test")
+//@ActiveProfiles("test")
 public class UserRepositoryTest {
 
 	@Autowired

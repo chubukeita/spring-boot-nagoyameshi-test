@@ -1,6 +1,7 @@
 package com.example.nagoyameshi.repository;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.LocalTime;
 
@@ -14,7 +15,6 @@ import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.ActiveProfiles;
 
 import com.example.nagoyameshi.entity.Restaurant;
 
@@ -28,7 +28,7 @@ import com.example.nagoyameshi.entity.Restaurant;
 //		"spring.sql.init.mode=never",
 //		"spring.jpa.hibernate.ddl-auto=create-drop"
 //})
-@ActiveProfiles("test")
+// @ActiveProfiles("test")
 public class RestaurantRepositoryTest {
 
 	@Autowired

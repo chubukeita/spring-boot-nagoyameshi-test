@@ -1,6 +1,7 @@
 package com.example.nagoyameshi.repository;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,7 +10,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Description;
-import org.springframework.test.context.ActiveProfiles;
 
 import com.example.nagoyameshi.entity.Company;
 
@@ -23,7 +23,7 @@ import com.example.nagoyameshi.entity.Company;
 //		"spring.sql.init.mode=never",
 //		"spring.jpa.hibernate.ddl-auto=create-drop"
 //})
-@ActiveProfiles("test")
+// @ActiveProfiles("test")
 public class CompanyRepositoryTest {
 
 	@Autowired
