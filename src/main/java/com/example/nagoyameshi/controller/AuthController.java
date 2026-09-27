@@ -1,5 +1,7 @@
 package com.example.nagoyameshi.controller;
 
+import java.util.Optional;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
@@ -53,10 +55,32 @@ public class AuthController {
 			HttpServletRequest httpServletRequest,
 			Model model) {
 
-		// メールアドレスが登録済みであれば、BindingResultオブジェクトにエラー内容を追加する
-		if (userService.isEmailRegistered(signupForm.getEmail())) {
+		// 正規の登録ユーザーの中で（退会ユーザーを除く）、メールアドレスが登録済みであれば、BindingResultオブジェクトにエラー内容を追加する
+		Optional<User> optionalActiveUser = userService.findActiveByEmail(signupForm.getEmail());
+		if (optionalActiveUser != null) {
 			FieldError fieldError = new FieldError(bindingResult.getObjectName(), "email", "すでに登録済みのメールアドレスです。");
 			bindingResult.addError(fieldError);
+
+		}
+
+		System.out.println("optionalActiveUser:" + optionalActiveUser);
+		System.out.println(bindingResult);
+		System.out.println(bindingResult.getObjectName());
+		System.out.println(bindingResult.getFieldValue("email"));
+
+		// 一度退会したユーザーが、再入会画面に気づくことなく、新規会員登録画面から再入会しようとした場合は、再入会画面へ遷移する。
+		// この時、新規会員登録画面で入力されたメールアドレスが、再入会画面のメールアドレス欄へ自動的に追加入力されること。
+		// もし論理削除されているメールアドレスと、本画面から入力されたメールアドレスが一致する場合は、rejoin.htmlにreturnし、入力したメールアドレスが登録メールアドレスに入っている状態となる。
+		Optional<User> optionalDeletedUser = userService.findDeletedUserByEmail(signupForm.getEmail());
+		System.out.println("optionalDeletedUser: " + optionalDeletedUser);
+
+		if (optionalDeletedUser != null || optionalDeletedUser.isPresent()) {
+			RejoinForm rejoinForm = new RejoinForm();
+			rejoinForm.setEmail(signupForm.getEmail());
+			rejoinForm.setPassword(signupForm.getPassword());
+			rejoinForm.setPasswordConfirmation(signupForm.getPasswordConfirmation());
+			redirectAttributes.addFlashAttribute("rejoinForm", rejoinForm);
+			return "redirect:/rejoin";
 		}
 
 		// パスワードとパスワード（確認用）の入力値が一致しなければ、BindingResultオブジェクトにエラー内容を追加する
@@ -65,24 +89,13 @@ public class AuthController {
 			bindingResult.addError(fieldError);
 		}
 
-		// 一度退会したユーザーが、再入会画面に気づくことなく、新規会員登録画面から再入会しようとした場合は、再入会画面へ遷移する。
-		// この時、新規会員登録画面で入力されたメールアドレスが、再入会画面のメールアドレス欄へ自動的に追加入力されること。
-		// もし論理削除されているメールアドレスと、本画面から入力されたメールアドレスが一致する場合は、rejoin.htmlにreturnし、入力したメールアドレスが登録メールアドレスに入っている状態となる。
-		if (!userService.findDeletedUserByEmail(signupForm.getEmail()).isEmpty()) {
-			RejoinForm rejoinForm = new RejoinForm();
-			rejoinForm.setEmail(signupForm.getEmail());
-			redirectAttributes.addFlashAttribute("rejoinForm", rejoinForm);
-			return "redirect:/rejoin";
-		}
-
 		if (bindingResult.hasErrors()) {
 			model.addAttribute("signupForm", signupForm);
 			return "auth/signup";
 		}
 
 		User createdUser = userService.createUser(signupForm);
-		String requestUrl = new String(
-				httpServletRequest.getRequestURL());
+		String requestUrl = new String(httpServletRequest.getRequestURL());
 		signupEventPublisher.publishSignupEvent(createdUser, requestUrl);
 
 		redirectAttributes.addFlashAttribute("successMessage",

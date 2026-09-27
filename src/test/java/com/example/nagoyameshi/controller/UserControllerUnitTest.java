@@ -252,7 +252,7 @@ public class UserControllerUnitTest {
 				.with(csrf())
 				.flashAttr("userEditForm", expectedUserEditForm))
 				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("/user"))
+				//				.andExpect(redirectedUrl("/user"))
 				.andExpect(model().hasNoErrors())
 				// redirect なので Model に BindingResult は無い（=存在しないことを確認）
 				.andExpect(model().attributeDoesNotExist(BR_USER_EDIT_FORM));

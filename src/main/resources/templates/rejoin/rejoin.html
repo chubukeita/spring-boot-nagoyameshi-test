@@ -36,7 +36,7 @@
 						<div th:if="${errorMessage}" class="alert alert-danger">
 							<span th:text="${errorMessage}"></span>
 						</div>
-						
+
 						<hr class="mb-4">
 
 						<form method="post" th:action="@{/rejoin}" th:object="${rejoinForm}">
@@ -46,12 +46,31 @@
 								<label class="fw-bold">登録メールアドレス</label>
 								<div th:if="${#fields.hasErrors('email')}" id="emailError" class="text-danger small mb-2"
 									th:errors="*{email}"></div>
-								<input type="email" id="email" class="form-control" th:field="*{email}" required
-									placeholder="taro.samurai@example.com">
+								<input type="email" id="email" class="form-control" th:field="*{email}" required>
 							</div>
 
+
+							<div class="form-group mb-3">
+								<label class="fw-bold">パスワード</label>
+								<div th:if="${#fields.hasErrors('password')}" class="text-danger small mb-2" th:errors="*{password}">
+								</div>
+								<input type="password" id="password" name="password" class="form-control" th:value="*{password}"
+									required>
+							</div>
+
+							<div class="form-group mb-3">
+								<label class="fw-bold">パスワード（確認用）</label>
+								<div th:if="${#fields.hasErrors('passwordConfirmation')}" class="text-danger small mb-2"
+									th:errors="*{passwordConfirmation}"></div>
+								<input type="password" id="passwordConfirmation" name="passwordConfirmation" class="form-control"
+									th:value="*{passwordConfirmation}" required>
+							</div>
+
+							<hr class="my-4">
+
 							<div class="d-flex justify-content-center gap-3">
-								<button type="submit" id="rejoinButton" class="btn text-white shadow-sm w-50 nagoyameshi-btn">再入会する</button>
+								<button type="submit" id="rejoinButton"
+									class="btn text-white shadow-sm w-50 nagoyameshi-btn">再入会する</button>
 								<a th:href="@{/login}" class="btn btn-outline-secondary w-25">ログインへ</a>
 							</div>
 						</form>

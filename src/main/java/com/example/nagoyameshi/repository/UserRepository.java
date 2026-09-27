@@ -11,12 +11,14 @@ import org.springframework.data.jpa.repository.Query;
 import com.example.nagoyameshi.entity.User;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
+
 	public User findByEmail(String email);
 
 	public Page<User> findByNameLikeOrFuriganaLike(String nameKeyword, String furiganaKeyword, Pageable pageable);
 
 	public long countByRole_Name(String roleName);
 
+	// 正規の登録ユーザーを検索して返す
 	public Optional<User> findByEmailAndDeletedAtIsNull(String email);
 
 	// メールアドレスが一致する退会ユーザーを取得する
