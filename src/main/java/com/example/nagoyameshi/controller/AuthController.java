@@ -57,24 +57,18 @@ public class AuthController {
 
 		// 正規の登録ユーザーの中で（退会ユーザーを除く）、メールアドレスが登録済みであれば、BindingResultオブジェクトにエラー内容を追加する
 		Optional<User> optionalActiveUser = userService.findActiveByEmail(signupForm.getEmail());
-		if (optionalActiveUser != null) {
+		if (optionalActiveUser.isPresent()) {
 			FieldError fieldError = new FieldError(bindingResult.getObjectName(), "email", "すでに登録済みのメールアドレスです。");
 			bindingResult.addError(fieldError);
 
 		}
 
-		System.out.println("optionalActiveUser:" + optionalActiveUser);
-		System.out.println(bindingResult);
-		System.out.println(bindingResult.getObjectName());
-		System.out.println(bindingResult.getFieldValue("email"));
-
 		// 一度退会したユーザーが、再入会画面に気づくことなく、新規会員登録画面から再入会しようとした場合は、再入会画面へ遷移する。
 		// この時、新規会員登録画面で入力されたメールアドレスが、再入会画面のメールアドレス欄へ自動的に追加入力されること。
 		// もし論理削除されているメールアドレスと、本画面から入力されたメールアドレスが一致する場合は、rejoin.htmlにreturnし、入力したメールアドレスが登録メールアドレスに入っている状態となる。
 		Optional<User> optionalDeletedUser = userService.findDeletedUserByEmail(signupForm.getEmail());
-		System.out.println("optionalDeletedUser: " + optionalDeletedUser);
 
-		if (optionalDeletedUser != null || optionalDeletedUser.isPresent()) {
+		if (optionalDeletedUser.isPresent()) {
 			RejoinForm rejoinForm = new RejoinForm();
 			rejoinForm.setEmail(signupForm.getEmail());
 			rejoinForm.setPassword(signupForm.getPassword());

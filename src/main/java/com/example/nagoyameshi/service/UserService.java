@@ -181,7 +181,7 @@ public class UserService {
 		userRepository.save(user);
 	}
 
-	// コントローラ用：未退会ユーザーをOptionalで返す（存在確認はController側）
+	// 未退会ユーザーをOptionalで返す（存在確認はController側）
 	public Optional<User> findActiveByEmail(String email) {
 		return userRepository.findByEmailAndDeletedAtIsNull(email);
 	}

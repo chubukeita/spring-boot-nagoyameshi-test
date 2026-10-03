@@ -118,6 +118,22 @@ public class AuthControllerUnitTest {
 		return expectedSignupForm;
 	}
 
+	public SignupForm createExpectedPasswordInvalidSignupForm(String email) {
+		SignupForm expectedPasswordInvalidSignupForm = new SignupForm();
+
+		expectedPasswordInvalidSignupForm.setName("侍 太郎");
+		expectedPasswordInvalidSignupForm.setFurigana("サムライ タロウ");
+		expectedPasswordInvalidSignupForm.setPostalCode("1010022");
+		expectedPasswordInvalidSignupForm.setAddress("東京都千代田区神田練塀町300番地");
+		expectedPasswordInvalidSignupForm.setPhoneNumber("09012345678");
+		expectedPasswordInvalidSignupForm.setBirthday("");
+		expectedPasswordInvalidSignupForm.setOccupation("エンジニア");
+		expectedPasswordInvalidSignupForm.setEmail(email);
+		expectedPasswordInvalidSignupForm.setPassword("password");
+		expectedPasswordInvalidSignupForm.setPasswordConfirmation("password2");
+		return expectedPasswordInvalidSignupForm;
+	}
+
 	public RejoinForm createExpectedRejoinForm(String email) {
 		RejoinForm expectedRejoinForm = new RejoinForm();
 
@@ -157,8 +173,8 @@ public class AuthControllerUnitTest {
 		RejoinForm expectedRejoinForm = createExpectedRejoinForm(expectedEmail);
 
 		// bindingResultにエラーがないこともテストケースとして加える。
-		when(userService.findDeletedUserByEmail(expectedEmail)).thenReturn(Optional.of(expectedDeletedUser));
 		when(userService.findActiveByEmail(expectedEmail)).thenReturn(Optional.empty());
+		when(userService.findDeletedUserByEmail(expectedEmail)).thenReturn(Optional.of(expectedDeletedUser));
 		//					when(userService.createUser(any())).thenReturn(null);
 		// voidメソッドはdoNothing()を使える
 
@@ -176,8 +192,8 @@ public class AuthControllerUnitTest {
 				.andExpect(flash().attribute("rejoinForm", expectedRejoinForm))
 				.andExpect(model().hasNoErrors());
 
-		verify(userService, times(1)).findDeletedUserByEmail(expectedEmail);
 		verify(userService, times(1)).findActiveByEmail(expectedEmail);
+		verify(userService, times(1)).findDeletedUserByEmail(expectedEmail);
 		verify(userService, never()).createUser(any());
 		verify(signupEventPublisher, never()).publishSignupEvent(any(), any());
 	}
@@ -203,8 +219,8 @@ public class AuthControllerUnitTest {
 		expectedUndefinedUser.setEmail(expectedSignupForm.getEmail());
 		expectedUndefinedUser.setPassword(expectedSignupForm.getPassword());
 
-		when(userService.findActiveByEmail(expectedEmail)).thenReturn(null);
-		when(userService.findDeletedUserByEmail(expectedEmail)).thenReturn(null);
+		when(userService.findActiveByEmail(expectedEmail)).thenReturn(Optional.empty());
+		when(userService.findDeletedUserByEmail(expectedEmail)).thenReturn(Optional.empty());
 		when(userService.createUser(expectedSignupForm)).thenReturn(expectedUndefinedUser);
 		// voidメソッドはdoNothing()を使える
 
@@ -228,22 +244,15 @@ public class AuthControllerUnitTest {
 	}
 
 	@Test
-	@Description("signup_新規会員登録画面の検証：正規の登録ユーザー（退会ユーザーを除く）の場合は、メールアドレスが既に登録済みであれば、新規会員登録画面のままエラーメッセージが表示されること。")
+	@Description("signup_新規会員登録画面の検証：メールアドレスが既に登録済み、かつパスワードが一致している場合は、新規会員登録画面のままエラーメッセージが表示されること。")
 	public void signup_test3() throws Exception {
 		// 1 given（どういう場合、設定を書く）
 		String expectedEmail = "taro.samurai@example.com";
 		SignupForm expectedSignupForm = createExpectedSignupForm(expectedEmail);
 
 		User user = new User();
-		Optional<User> optionaUser;
-
-		// アクティブユーザーであることを保証
-		when(userService.findActiveByEmail(expectedEmail)).thenReturn(Optional.of(user)); // 1+2
-
-		//		when(userService.findActiveByEmail(expectedEmail)).thenReturn(null);　// 1
-		//		when(userService.findActiveByEmail(expectedEmail)).thenReturn(user); // 2
-
-		//		if (expectedActiveUser.getEmail() == expectedSignupForm.getEmail()) { 
+		when(userService.findActiveByEmail(expectedEmail)).thenReturn(Optional.of(user));
+		when(userService.findDeletedUserByEmail(expectedEmail)).thenReturn(Optional.empty());
 
 		// 2 when（実行）
 		this.mockMvc.perform(post("/signup")
@@ -253,42 +262,95 @@ public class AuthControllerUnitTest {
 				.andExpect(status().isOk())
 				.andExpect(view().name("auth/signup"))
 				.andExpect(model().attribute(BR_SIGNUP_FORM, fieldError("email", "すでに登録済みのメールアドレスです。")))
-				.andExpect(model().hasErrors());
+				.andExpect(model().errorCount(1));
 
 		// 3 then（期待値）
 		verify(userService, times(1)).findActiveByEmail(expectedEmail);
+		verify(userService, times(1)).findDeletedUserByEmail(expectedEmail);
 	}
 
 	@Test
-	@Description("signup_新規会員登録画面の検証：正規の登録ユーザー（退会ユーザーを除く）の場合は、メールアドレスが既に登録済みであれば、新規会員登録画面のままエラーメッセージが表示されること。")
+	@Description("signup_新規会員登録画面の検証：過去に解約していない新規ユーザーが、異なるパスワードを入力して登録しようとした場合は、新規会員登録画面のままエラーメッセージが表示されること。")
 	public void signup_test4() throws Exception {
+		String expectedEmail = "taro.samurai@example.com";
+
+		// 新規ユーザーのテストデータの設定(パスワードを一致していない場合)
+		SignupForm expectedPasswordInvalidSignupForm = createExpectedPasswordInvalidSignupForm(expectedEmail);
+
+		when(userService.findActiveByEmail(expectedEmail)).thenReturn(Optional.empty());
+		when(userService.findDeletedUserByEmail(expectedEmail)).thenReturn(Optional.empty());
+
+		// 期待値
+		this.mockMvc.perform(post("/signup")
+				.with(user(userprincipal))
+				.with(csrf())
+				.flashAttr("signupForm", expectedPasswordInvalidSignupForm))
+				.andExpect(status().isOk())
+				.andExpect(view().name("auth/signup"))
+				.andExpect(model().attribute(BR_SIGNUP_FORM, fieldError("password", "パスワードが一致しません。")))
+				.andExpect(model().errorCount(1));
+
+		verify(userService, times(1)).findDeletedUserByEmail(expectedEmail);
+		verify(userService, times(1)).findActiveByEmail(expectedEmail);
+		verify(userService, times(0)).createUser(any());
+		verify(signupEventPublisher, times(0)).publishSignupEvent(any(), any());
+	}
+
+	@Test
+	@Description("signup_新規会員登録画面の検証：正規の登録ユーザー（退会ユーザーを除く）の場合は、メールアドレスが既に登録済み、かつパスワードが一致していない場合は、新規会員登録画面のままエラーメッセージが表示されること。")
+	public void signup_test5() throws Exception {
+		// 1 given（どういう場合、設定を書く）
+		String expectedEmail = "taro.samurai@example.com";
+		SignupForm expectedPasswordInvalidSignupForm = createExpectedPasswordInvalidSignupForm(expectedEmail);
+
+		User user = new User();
+		when(userService.findActiveByEmail(expectedEmail)).thenReturn(Optional.of(user));
+		when(userService.findDeletedUserByEmail(expectedEmail)).thenReturn(Optional.empty());
+
+		// 2 when（実行）
+		this.mockMvc.perform(post("/signup")
+				.with(user(userprincipal))
+				.with(csrf())
+				.flashAttr("signupForm", expectedPasswordInvalidSignupForm))
+				.andExpect(status().isOk())
+				.andExpect(view().name("auth/signup"))
+				.andExpect(model().attribute(BR_SIGNUP_FORM, fieldError("email", "すでに登録済みのメールアドレスです。")))
+				.andExpect(model().attribute(BR_SIGNUP_FORM, fieldError("password", "パスワードが一致しません。")))
+				.andExpect(model().errorCount(2));
+
+		// 3 then（期待値）
+		verify(userService, times(1)).findActiveByEmail(expectedEmail);
+		verify(userService, times(1)).findDeletedUserByEmail(expectedEmail);
+		verify(userService, times(0)).createUser(any());
+		verify(signupEventPublisher, times(0)).publishSignupEvent(any(), any());
+	}
+
+	@Test
+	@Description("signup_新規会員登録画面の検証：正規の登録ユーザー（退会ユーザーを除く）の場合は、メールアドレスが既に登録済みであれば、ログイン画面に遷移し、入力メールアドレス、パスワードログイン画面のテキストボックスに表示されること。")
+	public void signup_test6() throws Exception {
 		// 1 given（どういう場合、設定を書く）
 		String expectedEmail = "taro.samurai@example.com";
 		SignupForm expectedSignupForm = createExpectedSignupForm(expectedEmail);
 
 		User user = new User();
-		Optional<User> optionaUser;
-
-		// アクティブユーザーであることを保証
-		when(userService.findActiveByEmail(expectedEmail)).thenReturn(Optional.of(user)); // 1+2
-
-		//		when(userService.findActiveByEmail(expectedEmail)).thenReturn(null);　// 1
-		//		when(userService.findActiveByEmail(expectedEmail)).thenReturn(user); // 2
-
-		//		if (expectedActiveUser.getEmail() == expectedSignupForm.getEmail()) { 
+		when(userService.findActiveByEmail(expectedEmail)).thenReturn(Optional.of(user));
+		when(userService.findDeletedUserByEmail(expectedEmail)).thenReturn(Optional.empty());
 
 		// 2 when（実行）
 		this.mockMvc.perform(post("/signup")
+				.param("email", expectedEmail)
 				.with(user(userprincipal))
 				.with(csrf())
 				.flashAttr("signupForm", expectedSignupForm))
-				.andExpect(status().isOk())
-				.andExpect(view().name("auth/signup"))
-				.andExpect(model().attribute(BR_SIGNUP_FORM, fieldError("email", "すでに登録済みのメールアドレスです。")))
-				.andExpect(model().hasErrors());
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("auth/login?email=" + expectedEmail))
+				.andExpect(model().hasNoErrors())
+				.andExpect(flash().attribute("errorMessage", "既にすでに登録済みのメールアドレスです。ログインページよりログインしてください。"));
 
 		// 3 then（期待値）
 		verify(userService, times(1)).findActiveByEmail(expectedEmail);
+		verify(userService, times(1)).findDeletedUserByEmail(expectedEmail);
+		verify(userService, times(0)).createUser(any());
+		verify(signupEventPublisher, times(0)).publishSignupEvent(any(), any());
 	}
-
 }
