@@ -31,7 +31,7 @@
 
 						<form th:action="@{/login}" method="post">
 							<div class="form-group mb-3">
-								<input type="text" class="form-control" name="username" required autocomplete="email"
+								<input type="text" class="form-control" name="username" th:value="${email}" required autocomplete="email"
 									placeholder="メールアドレス" autofocus>
 							</div>
 							<div class="form-group mb-3">

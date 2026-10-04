@@ -19,6 +19,7 @@ import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Description;
@@ -37,6 +38,15 @@ import com.example.nagoyameshi.service.UserService;
 import com.example.nagoyameshi.service.VerificationTokenService;
 
 @WebMvcTest(AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
+// @GetMapping("/login")のテストをおこなう際に、Spring Securityの機能を無効化しないと、/login?email=taro.samurai@email.comのように
+// emailをクエリパラメータに付与してアクセスしても、/loginにリダイレクトされてしまい、emailのクエリパラメータがnullになってしまう事象を防ぐために、
+// 追加した。
+// ただ、今回行っているのは単体テストであり、結合テストではない。
+// よって、外部昨日である（SpringSecurity）の機能を@AutoConfigureMockMvc(addFilters = false)で無効化することで、
+// 本当の意味で「単体」テストを実施することができる。SpringSecurityに関する単体テストは別クラスでテストコードとして記載する。
+// なお、SpringSecurityの機能を無効化することで、.with(user(userprincipal)).with(csrf())の記載は不要となるが、記載されていたとしても、
+// SpringSecurityが無効化されているだけで、あっても使わない機能を、余計に持っているだけなので、明示的に削除しなくても問題ない。
 public class AuthControllerUnitTest {
 
 	@MockBean
@@ -326,7 +336,7 @@ public class AuthControllerUnitTest {
 	}
 
 	@Test
-	@Description("signup_新規会員登録画面の検証：正規の登録ユーザー（退会ユーザーを除く）の場合は、メールアドレスが既に登録済みであれば、ログイン画面に遷移し、入力メールアドレス、パスワードログイン画面のテキストボックスに表示されること。")
+	@Description("signup_新規会員登録画面の検証：正規の登録ユーザー（退会ユーザーを除く）の場合は、メールアドレスが既に登録済みであれば、ログイン画面に遷移し、入力したメールアドレスをログイン画面のテキストボックスに表示されること。")
 	public void signup_test6() throws Exception {
 		// 1 given（どういう場合、設定を書く）
 		String expectedEmail = "taro.samurai@example.com";
@@ -338,19 +348,38 @@ public class AuthControllerUnitTest {
 
 		// 2 when（実行）
 		this.mockMvc.perform(post("/signup")
-				.param("email", expectedEmail)
 				.with(user(userprincipal))
 				.with(csrf())
 				.flashAttr("signupForm", expectedSignupForm))
 				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("auth/login?email=" + expectedEmail))
+				.andExpect(redirectedUrl("/login"))
 				.andExpect(model().hasNoErrors())
+				.andExpect(flash().attribute("email", expectedEmail))
 				.andExpect(flash().attribute("errorMessage", "既にすでに登録済みのメールアドレスです。ログインページよりログインしてください。"));
 
 		// 3 then（期待値）
 		verify(userService, times(1)).findActiveByEmail(expectedEmail);
-		verify(userService, times(1)).findDeletedUserByEmail(expectedEmail);
+		verify(userService, times(0)).findDeletedUserByEmail(expectedEmail);
 		verify(userService, times(0)).createUser(any());
 		verify(signupEventPublisher, times(0)).publishSignupEvent(any(), any());
+	}
+
+	@Test
+	@Description("login_ログイン画面の検証：正規の登録ユーザー（退会ユーザーを除く）が新規登録画面からログインしようとした場合に、新規登録画面で入力されたメールアドレスを受け取り、ログイン画面のメールアドレステキストボックスに表示されること。")
+	public void login_test1() throws Exception {
+		// 1 given（どういう場合、設定を書く）
+		String expectedEmail = "taro.samurai@example.com";
+
+		// 2 when（実行）
+		this.mockMvc.perform(get("/login")
+				.with(user(userprincipal))
+				.with(csrf())
+				.flashAttr("email", expectedEmail))
+				.andExpect(status().isOk())
+				.andExpect(view().name("auth/login"))
+				.andExpect(model().attribute("email", expectedEmail))
+				.andExpect(model().hasNoErrors());
+
+		// 3 then（期待値）
 	}
 }

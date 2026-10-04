@@ -38,7 +38,7 @@ public class WebSecurityConfig {
 				.formLogin((form) -> form
 						.loginPage("/login") // ログインページのURL
 						.loginProcessingUrl("/login") // ログインフォームの送信先URL
-						.defaultSuccessUrl("/?loggedIn") // ログイン成功時のリダイレクト先URL
+						.defaultSuccessUrl("/?loggedIn", true) // ログイン成功時のリダイレクト先URL(2026/10/4追加：.well-known/appspecific/com.chrome.devtools.jsonへ遷移することを防止するために、trueを追加)
 						.failureUrl("/login?error") // ログイン失敗時のリダイレクト先URL
 						.permitAll())
 				.logout((logout) -> logout

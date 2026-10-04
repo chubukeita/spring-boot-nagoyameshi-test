@@ -37,7 +37,8 @@ public class AuthController {
 	}
 
 	@GetMapping("/login")
-	public String login() {
+	public String login(@ModelAttribute("email") String email, Model model) {
+		model.addAttribute("email", email);
 		return "auth/login";
 	}
 
@@ -55,11 +56,12 @@ public class AuthController {
 			HttpServletRequest httpServletRequest,
 			Model model) {
 
-		// 正規の登録ユーザーの中で（退会ユーザーを除く）、メールアドレスが登録済みであれば、BindingResultオブジェクトにエラー内容を追加する
+		// 正規の登録ユーザーの中で（退会ユーザーを除く）、メールアドレスが登録済みであれば、ログイン画面へリダイレクトする。その時、emailやerrorMessageを追加する
 		Optional<User> optionalActiveUser = userService.findActiveByEmail(signupForm.getEmail());
 		if (optionalActiveUser.isPresent()) {
-			FieldError fieldError = new FieldError(bindingResult.getObjectName(), "email", "すでに登録済みのメールアドレスです。");
-			bindingResult.addError(fieldError);
+			redirectAttributes.addFlashAttribute("email", signupForm.getEmail());
+			redirectAttributes.addFlashAttribute("errorMessage", "既にすでに登録済みのメールアドレスです。ログインページよりログインしてください。");
+			return "redirect:/login";
 
 		}
 
