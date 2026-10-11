@@ -17,6 +17,7 @@ import java.util.Optional;
 
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,9 +44,9 @@ import com.example.nagoyameshi.service.VerificationTokenService;
 // emailをクエリパラメータに付与してアクセスしても、/loginにリダイレクトされてしまい、emailのクエリパラメータがnullになってしまう事象を防ぐために、
 // 追加した。
 // ただ、今回行っているのは単体テストであり、結合テストではない。
-// よって、外部昨日である（SpringSecurity）の機能を@AutoConfigureMockMvc(addFilters = false)で無効化することで、
+// よって、外部機能である（SpringSecurity）の機能を@AutoConfigureMockMvc(addFilters = false)で無効化することで、
 // 本当の意味で「単体」テストを実施することができる。SpringSecurityに関する単体テストは別クラスでテストコードとして記載する。
-// なお、SpringSecurityの機能を無効化することで、.with(user(userprincipal)).with(csrf())の記載は不要となるが、記載されていたとしても、
+// なお、SpringSecurityの機能を無効化することで、.with(user(userprincipal)).with(csrf())の記載は不要となるが、仮に記載されていたとしても、
 // SpringSecurityが無効化されているだけで、あっても使わない機能を、余計に持っているだけなので、明示的に削除しなくても問題ない。
 public class AuthControllerUnitTest {
 
@@ -254,6 +255,7 @@ public class AuthControllerUnitTest {
 	}
 
 	@Test
+	@Disabled("新規会員登録画面で正規ユーザーがログインしようとした場合の処理ですが、ログイン画面改修前には必要だったテストコード：現在不使用ですが比較のために残している")
 	@Description("signup_新規会員登録画面の検証：メールアドレスが既に登録済み、かつパスワードが一致している場合は、新規会員登録画面のままエラーメッセージが表示されること。")
 	public void signup_test3() throws Exception {
 		// 1 given（どういう場合、設定を書く）
@@ -307,6 +309,7 @@ public class AuthControllerUnitTest {
 	}
 
 	@Test
+	@Disabled("新規会員登録画面で正規ユーザーがログインしようとした場合の処理ですが、ログイン画面改修前には必要だったテストコード：現在不使用ですが比較のために残している")
 	@Description("signup_新規会員登録画面の検証：正規の登録ユーザー（退会ユーザーを除く）の場合は、メールアドレスが既に登録済み、かつパスワードが一致していない場合は、新規会員登録画面のままエラーメッセージが表示されること。")
 	public void signup_test5() throws Exception {
 		// 1 given（どういう場合、設定を書く）
@@ -355,7 +358,7 @@ public class AuthControllerUnitTest {
 				.andExpect(redirectedUrl("/login"))
 				.andExpect(model().hasNoErrors())
 				.andExpect(flash().attribute("email", expectedEmail))
-				.andExpect(flash().attribute("errorMessage", "既にすでに登録済みのメールアドレスです。ログインページよりログインしてください。"));
+				.andExpect(flash().attribute("errorMessage", "既に登録済みのメールアドレスです。ログインページよりログインしてください。"));
 
 		// 3 then（期待値）
 		verify(userService, times(1)).findActiveByEmail(expectedEmail);

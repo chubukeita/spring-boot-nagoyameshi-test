@@ -37,8 +37,7 @@ public class AuthController {
 	}
 
 	@GetMapping("/login")
-	public String login(@ModelAttribute("email") String email, Model model) {
-		model.addAttribute("email", email);
+	public String login() {
 		return "auth/login";
 	}
 
@@ -60,7 +59,7 @@ public class AuthController {
 		Optional<User> optionalActiveUser = userService.findActiveByEmail(signupForm.getEmail());
 		if (optionalActiveUser.isPresent()) {
 			redirectAttributes.addFlashAttribute("email", signupForm.getEmail());
-			redirectAttributes.addFlashAttribute("errorMessage", "既にすでに登録済みのメールアドレスです。ログインページよりログインしてください。");
+			redirectAttributes.addFlashAttribute("errorMessage", "既に登録済みのメールアドレスです。ログインページよりログインしてください。");
 			return "redirect:/login";
 
 		}
