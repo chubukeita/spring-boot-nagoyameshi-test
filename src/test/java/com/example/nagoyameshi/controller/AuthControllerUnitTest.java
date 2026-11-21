@@ -31,6 +31,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.nagoyameshi.entity.Role;
 import com.example.nagoyameshi.entity.User;
+import com.example.nagoyameshi.entity.VerificationToken;
 import com.example.nagoyameshi.event.SignupEventPublisher;
 import com.example.nagoyameshi.form.RejoinForm;
 import com.example.nagoyameshi.form.SignupForm;
@@ -46,8 +47,9 @@ import com.example.nagoyameshi.service.VerificationTokenService;
 // ただ、今回行っているのは単体テストであり、結合テストではない。
 // よって、外部機能である（SpringSecurity）の機能を@AutoConfigureMockMvc(addFilters = false)で無効化することで、
 // 本当の意味で「単体」テストを実施することができる。SpringSecurityに関する単体テストは別クラスでテストコードとして記載する。
-// なお、SpringSecurityの機能を無効化することで、.with(user(userprincipal)).with(csrf())の記載は不要となるが、仮に記載されていたとしても、
+// なお、SpringSecurityの機能を無効化することで、.with(user(userprincipal))の記載は不要となるが、仮に記載されていたとしても、
 // SpringSecurityが無効化されているだけで、あっても使わない機能を、余計に持っているだけなので、明示的に削除しなくても問題ない。
+// しかし、紛らわしいので、.with(user(userprincipal))は削除してある。
 public class AuthControllerUnitTest {
 
 	@MockBean
@@ -65,7 +67,8 @@ public class AuthControllerUnitTest {
 	@Autowired
 	private MockMvc mockMvc;
 
-	private UserDetailsImpl userprincipal;
+	private UserDetailsImpl userprincipalActiveUser;
+	private UserDetailsImpl userprincipalDeletedUser;
 
 	User expectedActiveUser = new User();
 	User expectedDeletedUser = new User();
@@ -89,7 +92,7 @@ public class AuthControllerUnitTest {
 		expectedActiveUser.setDeleteReason(null);
 		expectedActiveUser.setDeletedByUser(null);
 
-		this.userprincipal = new UserDetailsImpl(expectedActiveUser,
+		this.userprincipalActiveUser = new UserDetailsImpl(expectedActiveUser,
 				List.of(new SimpleGrantedAuthority("ROLE_FREE_MEMBER")));
 
 		// 退会済みユーザーのテストデータの設定
@@ -108,7 +111,7 @@ public class AuthControllerUnitTest {
 		expectedDeletedUser.setDeleteReason("有料課金で高すぎる");
 		expectedDeletedUser.setDeletedByUser(true);
 
-		this.userprincipal = new UserDetailsImpl(expectedDeletedUser,
+		this.userprincipalDeletedUser = new UserDetailsImpl(expectedDeletedUser,
 				List.of(new SimpleGrantedAuthority("ROLE_FREE_MEMBER")));
 	}
 
@@ -186,7 +189,7 @@ public class AuthControllerUnitTest {
 		// bindingResultにエラーがないこともテストケースとして加える。
 		when(userService.findActiveByEmail(expectedEmail)).thenReturn(Optional.empty());
 		when(userService.findDeletedUserByEmail(expectedEmail)).thenReturn(Optional.of(expectedDeletedUser));
-		//					when(userService.createUser(any())).thenReturn(null);
+		// when(userService.createUser(any())).thenReturn(null);
 		// voidメソッドはdoNothing()を使える
 
 		// signupEventPublisher.publishSignupEvent(expectedUser, expectedUrl)は呼ばれないことを検証するため、never()を使う
@@ -194,7 +197,6 @@ public class AuthControllerUnitTest {
 
 		// 期待値
 		this.mockMvc.perform(post("/signup")
-				.with(user(userprincipal))
 				.with(csrf())
 				// model().attribute("signupForm", expectedUserEditForm)
 				.flashAttr("signupForm", expectedSignupForm))
@@ -210,7 +212,7 @@ public class AuthControllerUnitTest {
 	}
 
 	@Test
-	@Description("signup_新規会員登録画面の検証：過去に解約していない新規ユーザーが、正しくデータを入力した状態で登録ボタンを押した時、認証成功時のメッセージ付きのログイン画面へ遷移し、認証メールが送信されること。")
+	@Description("signup_新規会員登録画面の検証：過去に解約していない新規ユーザーが、正しくデータを入力した状態で登録ボタンを押した時、認証成功時のメッセージ付きのトップ画面へリダイレクト遷移し、認証メールが送信されること。")
 	public void signup_test2() throws Exception {
 		String expectedEmail = "taro.samurai@example.com";
 		String expectedUrl = "http://localhost/signup";
@@ -233,6 +235,7 @@ public class AuthControllerUnitTest {
 		when(userService.findActiveByEmail(expectedEmail)).thenReturn(Optional.empty());
 		when(userService.findDeletedUserByEmail(expectedEmail)).thenReturn(Optional.empty());
 		when(userService.createUser(expectedSignupForm)).thenReturn(expectedUndefinedUser);
+		doNothing().when(signupEventPublisher).publishSignupEvent(expectedUndefinedUser, expectedUrl);
 		// voidメソッドはdoNothing()を使える
 
 		// signupEventPublisher.publishSignupEvent(expectedUser, expectedUrl)は呼ばれないことを検証するため、never()を使う
@@ -240,7 +243,6 @@ public class AuthControllerUnitTest {
 
 		// 期待値
 		this.mockMvc.perform(post("/signup")
-				.with(user(userprincipal))
 				.with(csrf())
 				.flashAttr("signupForm", expectedSignupForm))
 				.andExpect(status().is3xxRedirection())
@@ -268,7 +270,6 @@ public class AuthControllerUnitTest {
 
 		// 2 when（実行）
 		this.mockMvc.perform(post("/signup")
-				.with(user(userprincipal))
 				.with(csrf())
 				.flashAttr("signupForm", expectedSignupForm))
 				.andExpect(status().isOk())
@@ -294,7 +295,6 @@ public class AuthControllerUnitTest {
 
 		// 期待値
 		this.mockMvc.perform(post("/signup")
-				.with(user(userprincipal))
 				.with(csrf())
 				.flashAttr("signupForm", expectedPasswordInvalidSignupForm))
 				.andExpect(status().isOk())
@@ -304,8 +304,8 @@ public class AuthControllerUnitTest {
 
 		verify(userService, times(1)).findDeletedUserByEmail(expectedEmail);
 		verify(userService, times(1)).findActiveByEmail(expectedEmail);
-		verify(userService, times(0)).createUser(any());
-		verify(signupEventPublisher, times(0)).publishSignupEvent(any(), any());
+		verify(userService, never()).createUser(any());
+		verify(signupEventPublisher, never()).publishSignupEvent(any(), any());
 	}
 
 	@Test
@@ -318,11 +318,9 @@ public class AuthControllerUnitTest {
 
 		User user = new User();
 		when(userService.findActiveByEmail(expectedEmail)).thenReturn(Optional.of(user));
-		when(userService.findDeletedUserByEmail(expectedEmail)).thenReturn(Optional.empty());
 
 		// 2 when（実行）
 		this.mockMvc.perform(post("/signup")
-				.with(user(userprincipal))
 				.with(csrf())
 				.flashAttr("signupForm", expectedPasswordInvalidSignupForm))
 				.andExpect(status().isOk())
@@ -334,8 +332,8 @@ public class AuthControllerUnitTest {
 		// 3 then（期待値）
 		verify(userService, times(1)).findActiveByEmail(expectedEmail);
 		verify(userService, times(1)).findDeletedUserByEmail(expectedEmail);
-		verify(userService, times(0)).createUser(any());
-		verify(signupEventPublisher, times(0)).publishSignupEvent(any(), any());
+		verify(userService, never()).createUser(any());
+		verify(signupEventPublisher, never()).publishSignupEvent(any(), any());
 	}
 
 	@Test
@@ -351,7 +349,6 @@ public class AuthControllerUnitTest {
 
 		// 2 when（実行）
 		this.mockMvc.perform(post("/signup")
-				.with(user(userprincipal))
 				.with(csrf())
 				.flashAttr("signupForm", expectedSignupForm))
 				.andExpect(status().is3xxRedirection())
@@ -362,9 +359,9 @@ public class AuthControllerUnitTest {
 
 		// 3 then（期待値）
 		verify(userService, times(1)).findActiveByEmail(expectedEmail);
-		verify(userService, times(0)).findDeletedUserByEmail(expectedEmail);
-		verify(userService, times(0)).createUser(any());
-		verify(signupEventPublisher, times(0)).publishSignupEvent(any(), any());
+		verify(userService, never()).findDeletedUserByEmail(expectedEmail);
+		verify(userService, never()).createUser(any());
+		verify(signupEventPublisher, never()).publishSignupEvent(any(), any());
 	}
 
 	@Test
@@ -375,7 +372,6 @@ public class AuthControllerUnitTest {
 
 		// 2 when（実行）
 		this.mockMvc.perform(get("/login")
-				.with(user(userprincipal))
 				.with(csrf())
 				.flashAttr("email", expectedEmail))
 				.andExpect(status().isOk())
@@ -385,4 +381,84 @@ public class AuthControllerUnitTest {
 
 		// 3 then（期待値）
 	}
+
+	@Test
+	@Description("signup_get_新規会員登録画面の表示検証：新規登録ボタンを押した際に、新規会員登録画面へ遷移し、表示されること。")
+	public void signup_get_test1() throws Exception {
+		// 1 given（どういう場合、設定を書く）
+
+		// 2 when（実行）
+		this.mockMvc.perform(get("/signup")
+				.with(csrf()))
+				.andExpect(status().isOk())
+				.andExpect(view().name("auth/signup"))
+				.andExpect(model().attribute("signupForm", new SignupForm()))
+				.andExpect(model().hasNoErrors());
+
+		// 3 then（期待値）
+	}
+
+	@Test
+	@Description("signup_verify_会員登録完了画面の検証：一度も入会したことがない新規ユーザーがメールに添付されたリンクを開いて認証が成功した際に、会員登録完了画面で遷移し、登録完了のメッセージが表示されること。")
+	public void signup_verify_test1() throws Exception {
+		// 1 given（どういう場合、設定を書く）
+		String expectedToken = "testtoken";
+
+		VerificationToken verificationToken = new VerificationToken();
+
+		User user = new User();
+
+		verificationToken.setId(1);
+		verificationToken.setUser(user);
+		verificationToken.setToken(expectedToken);
+
+		when(verificationTokenService.findVerificationTokenByToken(expectedToken)).thenReturn(verificationToken);
+		doNothing().when(userService).enableUser(user);
+
+		// 2 when（実行）
+		this.mockMvc.perform(get("/signup/verify")
+				.param("token", expectedToken)
+				.with(csrf()))
+				.andExpect(status().isOk())
+				.andExpect(view().name("auth/verify"))
+				.andExpect(model().attribute("successMessage", "会員登録が完了しました。"))
+				.andExpect(model().hasNoErrors());
+
+		// 3 then（期待値）
+		verify(verificationTokenService, times(1)).findVerificationTokenByToken(expectedToken);
+		verify(userService, times(1)).enableUser(user);
+
+	}
+
+	@Test
+	@Description("signup_verify_会員登録完了画面の検証：一度も入会したことがない新規ユーザーがメールに添付されたリンクを開いてtokenがなくて認証が失敗した際に、会員登録完了画面で遷移し、登録失敗のメッセージが表示されること。")
+	public void signup_verify_test2() throws Exception {
+		// 1 given（どういう場合、設定を書く）
+		String expectedToken = "testtoken";
+
+		VerificationToken verificationToken = new VerificationToken();
+
+		User user = new User();
+
+		verificationToken.setId(1);
+		verificationToken.setUser(user);
+		verificationToken.setToken(expectedToken);
+
+		when(verificationTokenService.findVerificationTokenByToken(expectedToken)).thenReturn(null);
+		doNothing().when(userService).enableUser(user);
+
+		// 2 when（実行）
+		this.mockMvc.perform(get("/signup/verify")
+				.param("token", expectedToken)
+				.with(csrf()))
+				.andExpect(status().isOk())
+				.andExpect(view().name("auth/verify"))
+				.andExpect(model().attribute("errorMessage", "トークンが無効です。"))
+				.andExpect(model().hasNoErrors());
+
+		// 3 then（期待値）
+		verify(verificationTokenService, times(1)).findVerificationTokenByToken(expectedToken);
+		verify(userService, never()).enableUser(any());
+	}
+
 }

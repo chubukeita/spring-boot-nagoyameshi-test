@@ -1,5 +1,6 @@
 package com.example.nagoyameshi.security;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -10,30 +11,22 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Description;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.nagoyameshi.entity.User;
 
-//実装
-//@Bean
-//public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//
-//    http.authorizeHttpRequests(auth -> auth
-//        .requestMatchers("/public/**").permitAll()
-//        .anyRequest().authenticated()
-//    );
-//
-//    return http.build();
-//}
-
-@SpringBootTest
+@SpringBootTest // WebSecurityConfigTestは単体テストの予定ではあるが、必要に応じて@SpringBootTestを使って結合テスト寄りの単体テストとして動かす。
 @AutoConfigureMockMvc
 class WebSecurityConfigTest {
 
@@ -153,6 +146,158 @@ class WebSecurityConfigTest {
 
 		// 3 then（期待値）
 		verify(userDetailsServiceImpl, times(1)).loadUserByUsername(expectedEmail);
+	}
+
+	@Test
+	@Description("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが/loginへアクセスする場合に、ログインページへ遷移し、誤ったメールアドレスと、正しいパスワードを入力してログインボタンを押した際に、/login?errorへリダイレクトされて、ログインが失敗すること")
+	public void securityFilterChain_test4() throws Exception {
+
+		String expectedEmail = "wrong@example.com";
+		String expectedPassword = "password";
+
+		// 1 given（どういう場合、設定を書く）
+		when(userDetailsServiceImpl.loadUserByUsername(expectedEmail))
+				.thenThrow(new UsernameNotFoundException("ユーザーが見つかりませんでした。"));
+
+		// 2 when（実行）
+		mockMvc.perform(post("/login")
+				.param("username", expectedEmail)
+				.param("password", expectedPassword)
+				.with(csrf()))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login?error"));
+
+		// 3 then（期待値）
+		verify(userDetailsServiceImpl, times(1)).loadUserByUsername(expectedEmail);
+	}
+
+	@Test
+	@Description("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが/loginへアクセスする場合に、ログインページへ遷移し、正しいメールアドレスと、誤ったパスワードを入力してログインボタンを押した際に、/login?errorへリダイレクトされて、ログインが失敗すること")
+	public void securityFilterChain_test5() throws Exception {
+
+		String expectedEmail = "taro.samurai@example.com";
+		String expectedPassword = "wrongpassword";
+
+		// 1 given（どういう場合、設定を書く）
+		when(userDetailsServiceImpl.loadUserByUsername(expectedEmail)).thenReturn(userprincipalFreeMember);
+
+		// 2 when（実行）
+		mockMvc.perform(post("/login")
+				.param("username", expectedEmail)
+				.param("password", expectedPassword)
+				.with(csrf()))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login?error"));
+
+		// 3 then（期待値）
+		verify(userDetailsServiceImpl, times(1)).loadUserByUsername(expectedEmail);
+	}
+
+	@Test
+	@Description("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが/loginへアクセスする場合に、ログインページへ遷移し、誤ったメールアドレスと、誤ったパスワードを入力してログインボタンを押した際に、/login?errorへリダイレクトされて、ログインが失敗すること")
+	public void securityFilterChain_test6() throws Exception {
+
+		String expectedEmail = "wrong@example.com";
+		String expectedPassword = "wrongpassword";
+
+		// 1 given（どういう場合、設定を書く）
+		when(userDetailsServiceImpl.loadUserByUsername(expectedEmail))
+				.thenThrow(new UsernameNotFoundException("ユーザーが見つかりませんでした。"));
+
+		// 2 when（実行）
+		mockMvc.perform(post("/login")
+				.param("username", expectedEmail)
+				.param("password", expectedPassword)
+				.with(csrf()))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login?error"));
+
+		// 3 then（期待値）
+		verify(userDetailsServiceImpl, times(1)).loadUserByUsername(expectedEmail);
+	}
+
+	@Test
+	@Description("securityFilterChain_SpringSecurityの認証、権限設定テスト：ログインユーザーがログアウトボタンを押下した時、/?loggedOutへリダイレクトされて、ログアウトが成功すること")
+	public void securityFilterChain_test7() throws Exception {
+
+		// 1 given（どういう場合、設定を書く）
+
+		// 2 when（実行）
+		mockMvc.perform(post("/logout")
+				.with(csrf())
+				.with(user(userprincipalFreeMember)))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/?loggedOut"));
+
+		// 3 then（期待値）
+	}
+
+	@Test
+	@Description("securityFilterChain_SpringSecurityの認証、権限設定テスト：ログインユーザーがログアウトボタンを押下した時、/?loggedOutへリダイレクトされて、ログアウトが成功すること")
+	public void securityFilterChain_test8() throws Exception {
+
+		// 1 given（どういう場合、設定を書く）
+
+		// 2 when（実行）
+		mockMvc.perform(post("/logout")
+				.with(csrf())
+				.with(user(userprincipalFreeMember)))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/?loggedOut"));
+
+		// 3 then（期待値）
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+			"/",
+			"/reservations",
+			"/signup",
+			"/rejoin",
+			"/resetPassword"
+	})
+	@Description("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証不要で、/、/signup、/rejoin、/resetPasswordページへアクセスできること")
+	public void securityFilterChain_test9(String url) throws Exception {
+
+		// 1 given（どういう場合、設定を書く）
+
+		// 2 when（実行）
+		mockMvc.perform(get(url)
+				.with(csrf()))
+				.andExpect(status().isOk());
+
+		// 3 then（期待値）
+	}
+
+	@Test
+	@Description("passwordEncoderのテスト：passwordEncoderがBCryptPasswordEncoderを返すこと")
+	public void passwordEncoder_test1() throws Exception {
+
+		// 1 given（どういう場合、設定を書く）
+		WebSecurityConfig webSecurityConfig = new WebSecurityConfig();
+
+		// 2 when（実行）
+		PasswordEncoder passwordEncoder = webSecurityConfig.passwordEncoder();
+
+		// 3 then（期待値）
+		assertInstanceOf(BCryptPasswordEncoder.class, passwordEncoder);
+	}
+
+	@Test
+	@Description("passwordEncoderのテスト：passwordEncoderがパスワードをハッシュ化して照合できること")
+	public void passwordEncoder_test2() throws Exception {
+
+		// 1 given（どういう場合、設定を書く）
+		WebSecurityConfig webSecurityConfig = new WebSecurityConfig();
+
+		// 2 when（実行）
+		PasswordEncoder passwordEncoder = webSecurityConfig.passwordEncoder();
+		String encodedPassword = passwordEncoder.encode("password");
+
+		// 3 then（期待値）
+		assertNotEquals("password", encodedPassword);
+		assertTrue(passwordEncoder.matches("password", encodedPassword));
+		assertFalse(passwordEncoder.matches("wrongpassword", encodedPassword));
 	}
 
 }

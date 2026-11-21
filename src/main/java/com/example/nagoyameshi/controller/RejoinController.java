@@ -43,19 +43,19 @@ public class RejoinController {
 	}
 
 	@GetMapping
-	public String showRejonForm(Model model) {
-		if (!model.containsAttribute("rejoinForm")) {
-			model.addAttribute("rejoinForm", new RejoinForm());
-		}
-		return "rejoin/rejoin";
+	public String index(Model model) {
+		model.addAttribute("rejoinForm", new RejoinForm());
+		return "rejoin/index";
 	}
 
 	@PostMapping
-	public String Rejoin(@ModelAttribute @Valid RejoinForm rejoinForm,
+	public String rejoin(@ModelAttribute @Valid RejoinForm rejoinForm,
 			BindingResult bindingResult,
 			RedirectAttributes redirectAttributes,
 			HttpServletRequest httpServletRequest,
 			Model model) {
+
+		Optional<User> optionalUser = userService.findDeletedUserByEmail(rejoinForm.getEmail());
 
 		// パスワードとパスワード（確認用）の入力値が一致しなければ、BindingResultオブジェクトにエラー内容を追加する
 		if (!rejoinForm.isSamePassword()) {
@@ -64,16 +64,15 @@ public class RejoinController {
 		}
 
 		if (bindingResult.hasErrors()) {
-			redirectAttributes.addFlashAttribute("rejoinForm", rejoinForm);
-			return "rejoin/rejoin";
+			model.addAttribute("rejoinForm", rejoinForm);
+			return "rejoin/index";
 		}
 
-		Optional<User> optionalUser = userService.findDeletedUserByEmail(rejoinForm.getEmail());
-
+		// 退会ユーザーが見つからない場合は、「該当メールアドレスのユーザーが見つかりません。」といったエラーメッセージを表示する
 		if (optionalUser.isEmpty()) {
 			RejoinResult result = RejoinResult.userNotFoundError();
 			model.addAttribute("errorMessage", result.getErrorMessage());
-			return "rejoin/rejoin";
+			return "rejoin/index";
 		}
 
 		User user = optionalUser.get();
@@ -90,7 +89,7 @@ public class RejoinController {
 	@GetMapping("/verify")
 	public String verify(@RequestParam(name = "token") String token, Model model) {
 		RejoinToken rejoinToken = rejoinTokenService.findRejoinTokenByToken(token);
-		User user = rejoinToken.getUser();
+		User user = (rejoinToken != null) ? rejoinToken.getUser() : null;
 
 		RejoinResult result = rejoinService.rejoinValidate(user, token, rejoinToken);
 

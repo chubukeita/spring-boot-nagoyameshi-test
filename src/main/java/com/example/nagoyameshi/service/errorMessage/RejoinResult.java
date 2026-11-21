@@ -4,28 +4,28 @@ import lombok.Data;
 
 @Data
 public class RejoinResult {
-	public static final String SUCCESS_MESSAGE = "再入会が完了しました。ログインパスワードは過去に本アプリで使用していたパスワードを引き続きご利用ください。";
-	public static final String SUCCESS_BUTTON_TEXT = "ログインページへ";
-	public static final String SUCCESS_BUTTON_URL = "/login";
+	private static final String SUCCESS_MESSAGE = "再入会が完了しました。ログインパスワードは過去に本アプリで使用していたパスワードを引き続きご利用ください。";
+	private static final String SUCCESS_BUTTON_TEXT = "ログインページへ";
+	private static final String SUCCESS_BUTTON_URL = "/login";
 
-	public static final int ERROR_ID_ALREADY_ENABLED = 1;
-	public static final int ERROR_ID_INVALID_TOKEN = 2;
-	public static final int ERROR_ID_USER_NOT_FOUND = 3;
+	private static final int ERROR_ID_ALREADY_ENABLED = 1;
+	private static final int ERROR_ID_INVALID_TOKEN = 2;
+	private static final int ERROR_ID_USER_NOT_FOUND = 3;
 
-	public static final String ERROR_MESSAGE_ALREADY_ENABLED = "既にご利用中のアカウントです。";
-	public static final String ERROR_MESSAGE_INVALID_TOKEN = "トークンが無効です。";
-	public static final String ERROR_MESSAGE_USER_NOT_FOUND = "該当メールアドレスのユーザーが見つかりません。";
+	private static final String ERROR_MESSAGE_ALREADY_ENABLED = "既にご利用中のアカウントです。";
+	private static final String ERROR_MESSAGE_INVALID_TOKEN = "トークンが無効です。";
+	private static final String ERROR_MESSAGE_USER_NOT_FOUND = "該当メールアドレスのユーザーが見つかりません。";
 
-	public static final String NEXT_ACTION_ALREADY_ENABLED = "現在入会中です。<br>以下のボタンより、ホーム画面に戻って<br>引き続き本サービスをご利用いただけます。";
-	public static final String NEXT_ACTION_INVALID_TOKEN = "恐れ入りますが、<br>一度開いたURLを再度開くことはできないので、<br>再度メール認証からやり直してください。";
-	public static final String NEXT_ACTION_USER_NOT_FOUND = "恐れ入りますが、<br>登録したメールアドレスをご確認のうえ、<br>再度メール認証からやり直してください。";
+	private static final String NEXT_ACTION_ALREADY_ENABLED = "現在入会中です。<br>以下のボタンより、ホーム画面に戻って<br>引き続き本サービスをご利用いただけます。";
+	private static final String NEXT_ACTION_INVALID_TOKEN = "恐れ入りますが、<br>一度開いたURLを再度開くことはできないので、<br>再度メール認証からやり直してください。";
+	private static final String NEXT_ACTION_USER_NOT_FOUND = "恐れ入りますが、<br>登録したメールアドレスをご確認のうえ、<br>再度メール認証からやり直してください。";
 
-	public static final String ERROR_BUTTON_TEXT_ALREADY_ENABLED = "ログイン画面へ戻る";
-	public static final String ERROR_BUTTON_URL_ALREADY_ENABLED = "/login";
-	public static final String ERROR_BUTTON_TEXT_INVALID_TOKEN = "ホームへ戻る";
-	public static final String ERROR_BUTTON_URL_INVALID_TOKEN = "/";
-	public static final String ERROR_BUTTON_TEXT_USER_NOT_FOUND = "再入会画面に戻る";
-	public static final String ERROR_BUTTON_URL_USER_NOT_FOUND = "/rejoin";
+	private static final String ERROR_BUTTON_TEXT_ALREADY_ENABLED = "ログイン画面へ戻る";
+	private static final String ERROR_BUTTON_URL_ALREADY_ENABLED = "/login";
+	private static final String ERROR_BUTTON_TEXT_INVALID_TOKEN = "ホームへ戻る";
+	private static final String ERROR_BUTTON_URL_INVALID_TOKEN = "/";
+	private static final String ERROR_BUTTON_TEXT_USER_NOT_FOUND = "再入会画面に戻る";
+	private static final String ERROR_BUTTON_URL_USER_NOT_FOUND = "/rejoin";
 
 	private final boolean success;
 	private final String successMessage;

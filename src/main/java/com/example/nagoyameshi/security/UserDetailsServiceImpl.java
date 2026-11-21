@@ -24,17 +24,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-		try {
-			User user = userRepository.findByEmail(email);
-			String userRoleName = user.getRole().getName();
+		User user = userRepository.findByEmail(email);
 
-			Collection<GrantedAuthority> authorities = new ArrayList<>();
-			authorities.add(new SimpleGrantedAuthority(userRoleName));
-
-			return new UserDetailsImpl(user, authorities);
-
-		} catch (Exception e) {
+		if (user == null) {
 			throw new UsernameNotFoundException("ユーザーが見つかりませんでした。");
 		}
+
+		String userRoleName = user.getRole().getName();
+
+		Collection<GrantedAuthority> authorities = new ArrayList<>();
+		authorities.add(new SimpleGrantedAuthority(userRoleName));
+
+		return new UserDetailsImpl(user, authorities);
+
 	}
 }
