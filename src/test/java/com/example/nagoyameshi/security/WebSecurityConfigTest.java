@@ -7,7 +7,6 @@ import static org.springframework.security.test.web.servlet.response.SecurityMoc
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -95,12 +94,6 @@ class WebSecurityConfigTest {
 		expectedFreeMemberRole.setName(expectedFreeMemberRoleName);
 
 		expectedFreeMemberUser.setName("侍 太郎");
-		expectedFreeMemberUser.setFurigana("サムライ タロウ");
-		expectedFreeMemberUser.setPostalCode("1010022");
-		expectedFreeMemberUser.setAddress("東京都千代田区神田練塀町300番地");
-		expectedFreeMemberUser.setPhoneNumber("09012345678");
-		expectedFreeMemberUser.setBirthday(LocalDate.of(1990, 1, 1));
-		expectedFreeMemberUser.setOccupation("エンジニア");
 		expectedFreeMemberUser.setPassword(new BCryptPasswordEncoder().encode("password"));
 		expectedFreeMemberUser.setRole(expectedFreeMemberRole);
 		expectedFreeMemberUser.setEmail("taro.samurai@example.com");
@@ -117,12 +110,6 @@ class WebSecurityConfigTest {
 		expectedPaidMemberRole.setName(expectedPaidMemberRoleName);
 
 		expectedPaidMemberUser.setName("侍 次郎");
-		expectedPaidMemberUser.setFurigana("サムライ ジロウ");
-		expectedPaidMemberUser.setPostalCode("1010022");
-		expectedPaidMemberUser.setAddress("東京都千代田区神田練塀町300番地");
-		expectedPaidMemberUser.setPhoneNumber("09012345679");
-		expectedPaidMemberUser.setBirthday(LocalDate.of(1991, 2, 2));
-		expectedPaidMemberUser.setOccupation("デザイナー");
 		expectedPaidMemberUser.setPassword(new BCryptPasswordEncoder().encode("password"));
 		expectedPaidMemberUser.setRole(expectedPaidMemberRole);
 		expectedPaidMemberUser.setEmail("jiro.samurai@example.com");
@@ -139,12 +126,6 @@ class WebSecurityConfigTest {
 		expectedAdminRole.setName(expectedAdminRoleName);
 
 		expectedAdminUser.setName("侍 花子");
-		expectedAdminUser.setFurigana("サムライ ハナコ");
-		expectedAdminUser.setPostalCode("1010022");
-		expectedAdminUser.setAddress("東京都千代田区神田練塀町300番地");
-		expectedAdminUser.setPhoneNumber("09012345670");
-		expectedAdminUser.setBirthday(LocalDate.of(1992, 3, 3));
-		expectedAdminUser.setOccupation("マーケティング");
 		expectedAdminUser.setPassword(new BCryptPasswordEncoder().encode("password"));
 		expectedAdminUser.setRole(expectedAdminRole);
 		expectedAdminUser.setEmail("hanako.samurai@example.com");
@@ -304,7 +285,7 @@ class WebSecurityConfigTest {
 		}
 
 		@Test
-		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：ログインユーザーがログアウトボタンを押下した時、/?loggedOutへリダイレクトされて、ログアウトが成功すること")
+		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログアウトボタンを押下した時、/?loggedOutへリダイレクトされて、ログアウトが成功すること")
 		public void securityFilterChain_test7() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
@@ -320,7 +301,7 @@ class WebSecurityConfigTest {
 		}
 
 		@Test
-		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：ログインユーザーがログアウトボタンを押下した時、/?loggedOutへリダイレクトされて、ログアウトが成功すること")
+		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：有料会員がログアウトボタンを押下した時、/?loggedOutへリダイレクトされて、ログアウトが成功すること")
 		public void securityFilterChain_test8() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
@@ -328,7 +309,23 @@ class WebSecurityConfigTest {
 			// 2 when（実行）
 			mockMvc.perform(post("/logout")
 					.with(csrf())
-					.with(user(userprincipalFreeMember)))
+					.with(user(userprincipalPaidMember)))
+					.andExpect(status().is3xxRedirection())
+					.andExpect(redirectedUrl("/?loggedOut"));
+
+			// 3 then（期待値）
+		}
+
+		@Test
+		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：管理者がログアウトボタンを押下した時、/?loggedOutへリダイレクトされて、ログアウトが成功すること")
+		public void securityFilterChain_test9() throws Exception {
+
+			// 1 given（どういう場合、設定を書く）
+
+			// 2 when（実行）
+			mockMvc.perform(post("/logout")
+					.with(csrf())
+					.with(user(userprincipalAdmin)))
 					.andExpect(status().is3xxRedirection())
 					.andExpect(redirectedUrl("/?loggedOut"));
 
@@ -349,7 +346,7 @@ class WebSecurityConfigTest {
 				"/storage/test.jpg,image/jpeg"
 		})
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、/css/**, /images/**, /js/**, /storage/**,ページへアクセスできること")
-		public void securityFilterChain_test9(String url, String expectedContentType) throws Exception {
+		public void securityFilterChain_test10(String url, String expectedContentType) throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -366,7 +363,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、/ページへアクセスできること")
-		public void securityFilterChain_test10() throws Exception {
+		public void securityFilterChain_test11() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 			when(categoryService.findFirstCategoryByName("和食")).thenReturn(washokuCategory);
@@ -440,7 +437,7 @@ class WebSecurityConfigTest {
 				"/resetPassword",
 		})
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、/signup、/rejoin、/resetPasswordページへアクセスできること")
-		public void securityFilterChain_test11(String url) throws Exception {
+		public void securityFilterChain_test12(String url) throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -454,7 +451,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、/resetPasswordVerificationページへアクセスできること")
-		public void securityFilterChain_test12() throws Exception {
+		public void securityFilterChain_test13() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 			when(resetService.isValidToken("testtoken")).thenReturn(true);
@@ -481,7 +478,7 @@ class WebSecurityConfigTest {
 				"/withdrawal"
 		})
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、/restaurants/{restaurantId}/reviews、/reservations、/restaurants/{restaurantId}/reservations、/favorites、/restaurants/{restaurantId}/favorites、/withdrawalページにアクセスされずにリダイレクトされること")
-		public void securityFilterChain_test13(String url) throws Exception {
+		public void securityFilterChain_test14(String url) throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -496,7 +493,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、/restaurantsページへアクセスできること")
-		public void securityFilterChain_test14() throws Exception {
+		public void securityFilterChain_test15() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 			PageRequest pageable = PageRequest.of(0, 15, Sort.by(Sort.Direction.ASC, "id"));
@@ -517,7 +514,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、/companyページへアクセスできること")
-		public void securityFilterChain_test15() throws Exception {
+		public void securityFilterChain_test16() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 			when(companyService.findFirstCompanyByOrderByIdDesc()).thenReturn(company);
@@ -533,7 +530,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、/termsページへアクセスできること")
-		public void securityFilterChain_test16() throws Exception {
+		public void securityFilterChain_test17() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 			when(termService.findFirstTermByOrderByIdDesc()).thenReturn(term);
@@ -549,7 +546,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、POST /subscription/createにアクセスされずにリダイレクトされること")
-		public void securityFilterChain_test17() throws Exception {
+		public void securityFilterChain_test18() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -570,7 +567,7 @@ class WebSecurityConfigTest {
 				"/subscription/create"
 		})
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、GET /subscription/register、GET /subscription/create にアクセスされずにリダイレクトされること")
-		public void securityFilterChain_test18(String url) throws Exception {
+		public void securityFilterChain_test19(String url) throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -589,7 +586,7 @@ class WebSecurityConfigTest {
 				"/subscription/cancel"
 		})
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、/subscription/edit、/subscription/cancelページにアクセスされずにリダイレクトされること")
-		public void securityFilterChain_test19(String url) throws Exception {
+		public void securityFilterChain_test20(String url) throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -608,7 +605,7 @@ class WebSecurityConfigTest {
 				"/subscription/delete"
 		})
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、POST /subscription/update、POST /subscription/deleteにアクセスされずにリダイレクトされること")
-		public void securityFilterChain_test20(String url) throws Exception {
+		public void securityFilterChain_test21(String url) throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -625,7 +622,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、/adminページにアクセスされずにリダイレクトされること")
-		public void securityFilterChain_test21() throws Exception {
+		public void securityFilterChain_test22() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -640,7 +637,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：未ログインユーザーが認証していない状態で、/userページにアクセスされずにリダイレクトされること")
-		public void securityFilterChain_test22() throws Exception {
+		public void securityFilterChain_test23() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -666,7 +663,7 @@ class WebSecurityConfigTest {
 				"/storage/test.jpg,image/jpeg"
 		})
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、/css/**, /images/**, /js/**, /storage/**,ページへアクセスできること")
-		public void securityFilterChain_test23(String url, String expectedContentType) throws Exception {
+		public void securityFilterChain_test24(String url, String expectedContentType) throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -683,7 +680,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、/ページへアクセスできること")
-		public void securityFilterChain_test24() throws Exception {
+		public void securityFilterChain_test25() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 			when(categoryService.findFirstCategoryByName("和食")).thenReturn(washokuCategory);
@@ -715,7 +712,7 @@ class WebSecurityConfigTest {
 				"/resetPassword",
 		})
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、/signup、/rejoin、/resetPasswordページへアクセスできること")
-		public void securityFilterChain_test25(String url) throws Exception {
+		public void securityFilterChain_test26(String url) throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -730,7 +727,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、/resetPasswordVerificationページへアクセスできること")
-		public void securityFilterChain_test26() throws Exception {
+		public void securityFilterChain_test27() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 			when(resetService.isValidToken("testtoken")).thenReturn(true);
@@ -754,7 +751,7 @@ class WebSecurityConfigTest {
 				"/favorites"
 		})
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、/restaurants/{restaurantId}/reviews、/reservations、/restaurants/{restaurantId}/reservations、/favorites、/restaurants/{restaurantId}/favorites、/withdrawalページへアクセスできること")
-		public void securityFilterChain_test27(String url) throws Exception {
+		public void securityFilterChain_test28(String url) throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -770,7 +767,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、GET /restaurants/{restaurantId}/reviews/register にアクセスすると /subscription/register へリダイレクトされること")
-		public void securityFilterChain_test28() throws Exception {
+		public void securityFilterChain_test29() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 			when(restaurantService.findRestaurantById(1)).thenReturn(Optional.of(restaurant));
@@ -788,7 +785,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、GET /restaurants/{restaurantId}/reservations/register にアクセスすると /subscription/register へリダイレクトされること")
-		public void securityFilterChain_test29() throws Exception {
+		public void securityFilterChain_test30() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -804,7 +801,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、GET /favorites にアクセスすると /subscription/register へリダイレクトされること")
-		public void securityFilterChain_test30() throws Exception {
+		public void securityFilterChain_test31() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -820,7 +817,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、GET /withdrawal/delete にアクセスできること")
-		public void securityFilterChain_test31() throws Exception {
+		public void securityFilterChain_test32() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -835,7 +832,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、/restaurantsページへアクセスできること")
-		public void securityFilterChain_test32() throws Exception {
+		public void securityFilterChain_test33() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 			PageRequest pageable = PageRequest.of(0, 15, Sort.by(Sort.Direction.ASC, "id"));
@@ -857,7 +854,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、/companyページへアクセスできること")
-		public void securityFilterChain_test33() throws Exception {
+		public void securityFilterChain_test34() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 			when(companyService.findFirstCompanyByOrderByIdDesc()).thenReturn(company);
@@ -874,7 +871,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、/termsページへアクセスできること")
-		public void securityFilterChain_test34() throws Exception {
+		public void securityFilterChain_test35() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 			when(termService.findFirstTermByOrderByIdDesc()).thenReturn(term);
@@ -891,7 +888,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、GET /subscription/register にアクセスできること")
-		public void securityFilterChain_test35() throws Exception {
+		public void securityFilterChain_test36() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -906,7 +903,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、POST /subscription/create にアクセスできること")
-		public void securityFilterChain_test36() throws Exception {
+		public void securityFilterChain_test37() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -928,7 +925,7 @@ class WebSecurityConfigTest {
 				"/subscription/cancel"
 		})
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、/subscription/edit、/subscription/cancelページが表示されずに403エラーが発生すること")
-		public void securityFilterChain_test37(String url) throws Exception {
+		public void securityFilterChain_test38(String url) throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -947,7 +944,7 @@ class WebSecurityConfigTest {
 				"/subscription/delete"
 		})
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、POST /subscription/update、POST /subscription/deleteが表示されずに403エラーが発生すること")
-		public void securityFilterChain_test38(String url) throws Exception {
+		public void securityFilterChain_test39(String url) throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -964,7 +961,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、/adminページが表示されずに403エラーが発生すること")
-		public void securityFilterChain_test39() throws Exception {
+		public void securityFilterChain_test40() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 
@@ -979,7 +976,7 @@ class WebSecurityConfigTest {
 
 		@Test
 		@DisplayName("securityFilterChain_SpringSecurityの認証、権限設定テスト：無料会員がログインしている状態で、/userページにアクセスできること")
-		public void securityFilterChain_test40() throws Exception {
+		public void securityFilterChain_test41() throws Exception {
 
 			// 1 given（どういう場合、設定を書く）
 

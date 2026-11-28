@@ -59,7 +59,7 @@ public class UserDetailsImplTest {
 	}
 
 	@Test
-	@Description("getPassword：ハッシュ化済みのパスワードを返すこと")
+	@Description("getPassword：登録されたパスワードを返すこと")
 	public void getPassword_test1() throws Exception {
 
 		// 1 given（どういう場合、設定を書く）
